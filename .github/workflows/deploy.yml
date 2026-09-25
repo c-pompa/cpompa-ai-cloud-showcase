@@ -24,7 +24,7 @@ jobs:
       - name: Scan history for secrets
         run: |
           docker run --rm -v "$PWD:/repo" -w /repo \
-            ghcr.io/gitleaks/gitleaks:latest detect --source /repo --verbose --redact
+            ghcr.io/gitleaks/gitleaks:v8.18.4 detect --source /repo --verbose --redact
 
   guards:
     name: PII + HTML guards
@@ -78,7 +78,7 @@ jobs:
             git config user.name "showcase-ci"
             git config user.email "actions@users.noreply.github.com"
             git commit -am "ci: stamp cache-bust ?v=${V} [skip ci]"
-            git push
+            git push origin HEAD:gh-pages
           fi
       - name: Site published
-        run: echo "gh-pages branch is the Pages source — push above publishes at https://c-pompa.github.io/cpompa-ai-cloud-showcase/?v=${GITHUB_SHA::7}"
+        run: echo "gh-pages branch is the Pages source — push above publishes the site; the stamp caches asset fetches"
