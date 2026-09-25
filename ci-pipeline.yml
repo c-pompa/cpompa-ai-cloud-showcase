@@ -1,0 +1,697 @@
+stages: [lint, test, security, build, security-image, deploy-dev, deploy-prod, cutover, maintenance]
+
+# Avoid duplicate pipelines: run for MRs, dev, and main pushes only —
+# not plain feature-branch pushes (which race with remove_source_branch).
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    # P3.4: the drift-check schedule (DRIFT_CHECK=true) must be able to build
+    # a pipeline at all, or the job below is unreachable.
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $DRIFT_CHECK == "true"'
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  # One place to pin uv: the same version checks the lock, installs the test venv and
+  # the image builds with. Different uv versions can lay out an environment
+  # differently, and then the lock stops describing what runs.
+  UV_VERSION: "0.12.6"
+  DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+  # Not credential-shaped on purpose: a placeholder like "sk_test_..." is flagged by
+  # secrets scanners, and an allowlisted finding is one nobody reads. Nothing asserts
+  # this value's format — tests that need Stripe stubs set their own.
+  STRIPE_SECRET_KEY: "ci-placeholder-not-a-real-key"
+  # Deploy jobs read compose + alembic from this DEDICATED worktree of the main
+  # repo, never from the interactive checkout: a `git checkout --detach` there
+  # fails (correctly) whenever a session has uncommitted WIP, and pipeline #1259
+  # died exactly that way on 2026-09-19 with the escalation slice in flight. The
+  # deploy worktree is force-checked-out, so it can clobber only itself.
+  DEPLOY_CHECKOUT: "/Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud-deploy"
+
+# Shell executors on LAN nodes (Mac mini + pomps-pc WSL runner). No container
+# image; venv created per-job.
+#
+# Job routing. Tags are AND-ed: a job runs only on nodes that hold *all* of its
+# tags, so the tag is the contract for where a job may land.
+#   [linux] portable - pure repo work (lint, tests, source scans, compose and CI
+#           validation): needs only git, python/uv and docker on the node, so any
+#           LAN node can take it and two nodes run two MRs at once.
+#   [mini]  host-bound - needs the mini itself: its docker daemon and the
+#           SHA-tagged image built there, or its compose project and ports
+#           (build, image scans, deploy, rollback, cutover, migrate, prune).
+#           Moving one of these to another node silently breaks the handoff.
+#
+# Nodes advertise their tags from terraform/node_runner in the homelab repo -
+# adding capacity is a tfvars entry there, not a new tag invented per job.
+#
+# uv is not on every node that holds [linux]. The shell nodes have it (brew on the mini,
+# provisioned on pomps-pc); the docker node does not, because its jobs run inside a
+# container image (python:3.13-slim ships pip but no uv). A routing tag cannot see that
+# difference, so the SAME COMMIT passed on the mini and died on the docker node with "uv is
+# not installed for this runner" - a flake that reads exactly like a stale lock. Every
+# uv-dependent job therefore provisions the pinned version itself, and the contract above
+# ("needs only git, python/uv and docker on the node") becomes true of every node that
+# accepts the tag.
+.uv-bootstrap:
+  before_script:
+    - |-
+      if ! command -v uv >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/uv" ]; then
+        echo "uv not provisioned on this node - installing uv==$UV_VERSION for this job"
+        python3 -m pip install --quiet "uv==$UV_VERSION"
+      fi
+      command -v uv >/dev/null 2>&1 || export PATH="$HOME/.local/bin:$PATH"
+      command -v uv >/dev/null 2>&1 || { echo "uv could not be provisioned - see docs/dependency-lock.md"; exit 1; }
+      uv --version
+
+lint:
+  extends: .uv-bootstrap
+
+  stage: lint
+  tags: [linux]
+  script:
+    # Lints with the ruff that uv.lock pins, not with "latest". Installing an
+    # unpinned linter is the flapping gate this file warns about for scanners: a new
+    # ruff release with new rules fails the pipeline with no commit behind it, which
+    # trains people to disable the rule rather than to pin the tool. `uv run
+    # --frozen` refuses to re-resolve, so the version here is exactly the one the
+    # test job and the image use -- pyproject's `ruff>=0.4` range is not consulted.
+    - uv run --frozen --extra dev ruff check src tests scripts
+
+# The declared catalog gate: config/models.yaml must hold every model the
+# platform can serve or escalate to, with hosted rates equal to the derived
+# table (ADR-0004 §Status — best practice, no tribal knowledge). Runs in lint so
+# a drift fails the pipeline before tests are even worth running. The runtime
+# half of this gate is models_manifest_warnings() at boot.
+models-manifest:
+  extends: .uv-bootstrap
+
+  stage: lint
+  tags: [linux]
+  script:
+    - uv run --frozen --extra dev python scripts/validate_models.py
+
+# Fail on a malformed compose file here, rather than discovering it on the one
+# runner that can actually deploy. --quiet = parse + validate, print nothing.
+compose-validate:
+  stage: lint
+  tags: [linux]
+  script:
+    - cd compose
+    - docker compose config --quiet && echo "compose config OK (dev)"
+    # Prod is parsed against its names-only template, so CI needs no secrets while
+    # the template stays the contract: a variable added to docker-compose.prod.yml
+    # but not listed in .env.prod.example fails here, not on the one machine that
+    # can actually deploy. tests/test_prod_stack.py pins the rest - no host port
+    # shared with dev, its own project and volume, a real healthcheck.
+    - docker compose --env-file .env.prod.example -f docker-compose.prod.yml config --quiet && echo "compose config OK (prod, vs .env.prod.example)"
+
+# Same reasoning as compose-validate, one layer up: catch an unformatted or invalid
+# .tf here rather than on the one machine that can deploy. `init -backend=false`
+# because CI must never create or touch real state, and validate needs no secrets.
+# Homebrew is not on a non-login shell's PATH, so add it explicitly.
+iac-validate:
+  stage: lint
+  tags: [mini]
+  script:
+    - export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
+    - command -v tofu >/dev/null || { echo "OpenTofu is not installed on this runner"; exit 1; }
+    - |
+      if ! tofu fmt -check -recursive infra; then
+        echo "infra/ is not formatted - run: tofu fmt -recursive infra"
+        exit 1
+      fi
+    - |
+      for root in infra infra/app; do
+        echo "--- validating $root ---"
+        tofu -chdir="$root" init -backend=false -input=false >/dev/null || exit 1
+        tofu -chdir="$root" validate || exit 1
+      done
+
+# A lock nobody re-generates is a lock that lies: it stops describing the project and
+# nothing notices until an install disagrees with it. This fails the moment
+# pyproject.toml and uv.lock diverge, so "run uv lock" is enforced rather than
+# remembered.
+lock-check:
+  extends: .uv-bootstrap
+  stage: lint
+  tags: [linux]
+  script:
+    - uv lock --check
+
+test:
+  extends: .uv-bootstrap
+  stage: test
+  tags: [linux]
+  script:
+    # From uv.lock, not from pyproject's ranges: the suite then runs on exactly the
+    # pins the image ships. --frozen refuses to re-resolve, so a stale lock fails here
+    # instead of quietly testing something else.
+    - uv sync --frozen --extra dev
+    - .venv/bin/pytest tests/ -q
+
+# --- security gates ---------------------------------------------------------------
+# Every job here is a prerequisite of deploy-prod, so an artifact that fails a scan
+# cannot be promoted. Two properties keep the gate from becoming decoration, and both
+# are pinned by tests/test_security_gate.py: nothing in these stages may be
+# `allow_failure`, and every scanner is pinned by tag — a floating scanner changes its
+# policy set under you, the gate starts flapping, and a flapping gate gets switched off.
+#
+# The SAST layer is deliberately *not* a job here: ruff's flake8-bandit rules ("S" in
+# pyproject.toml) run inside the existing `lint` job, so the baseline costs nothing.
+# checkov's Python SAST was evaluated and rejected — it silently needs Semgrep, which
+# is not installed, and reported nothing at all, which is worse than no scan.
+
+# Jobs that only ever pull PUBLIC scanner images, on whatever node the [linux] tag
+# sends them to. Pinning an empty docker config directory makes the pull independent
+# of the node's credential-helper state: a `credsStore` entry (Docker Desktop's
+# `desktop.exe`) makes the CLI run that helper for EVERY pull, public or not, and the
+# Linux CLI inside a WSL runner cannot execute a Windows helper — so the pull dies with
+# `error getting credentials - err: exit status 1` and exit 125 before any bytes move.
+# Anonymous pull is all these scans need; if a job ever needs a private registry, it
+# must NOT extend this template.
+.docker-public-images:
+  variables:
+    DOCKER_CONFIG: "$CI_PROJECT_DIR/.ci-docker-config"
+  before_script:
+    - mkdir -p "$DOCKER_CONFIG" && printf '{}' > "$DOCKER_CONFIG/config.json"
+
+secrets-scan:
+  extends: .docker-public-images
+  stage: security
+  # Needs docker, so it must not drift onto the WSL runner (whose distro has
+  # no docker CLI today) — the [linux] tag matches both runners. [mini] has
+  # docker 29.x and is where build/image-scan already run.
+  tags: [mini]
+  script:
+    # Scans history, not just the working tree: a credential that was committed and
+    # later deleted still lives in every clone. --redact keeps a real finding out of
+    # job logs; --exit-code 1 makes it fail the pipeline rather than warn.
+    - docker run --rm -v "$CI_PROJECT_DIR:/repo" -w /repo zricethezav/gitleaks:v8.30.1 git --redact --exit-code 1 --no-banner
+
+config-scan:
+  extends: .docker-public-images
+  stage: security
+  # Same reason as secrets-scan: docker-run based, pinned to the mini.
+  tags: [mini]
+  script:
+    # Dockerfile: non-root user, healthcheck, no unpinned base. CI definition: job
+    # hygiene. Both verified locally and non-empty (60 and 27 checks passing).
+    - docker run --rm -v "$CI_PROJECT_DIR:/tf" -w /tf bridgecrew/checkov:3.2.513 -f Dockerfile --framework dockerfile --compact --quiet
+    - docker run --rm -v "$CI_PROJECT_DIR:/tf" -w /tf bridgecrew/checkov:3.2.513 -f .gitlab-ci.yml --framework gitlab_ci --compact --quiet
+    # NOT here: checkov's terraform framework for infra/app. It reported zero resources
+    # from every path tried (., infra, infra/app) with the report disabled, so it would
+    # be a scan that proves nothing while looking green — the same failure as checkov's
+    # Python SAST below. That stack is covered by the `iac-validate` job (tofu init
+    # -backend=false + validate); revisit checkov-terraform when an invocation parses.
+
+build:
+  stage: build
+  tags: [mini]
+  script:
+    # APT_REFRESH is the cache key for the base-image security-update layer at the
+    # bottom of the Dockerfile: without a per-pipeline value, Docker reuses that
+    # layer and the image keeps shipping package versions Debian has already fixed
+    # (which is what made image-scan fail on 2026-09-12 against an unchanged base).
+    #
+    # GIT_COMMIT/BUILT_AT are the image's identity, baked in by the Dockerfile and
+    # reported by /version and by the deploy jobs' identity check. They are what
+    # makes "which build is running?" answerable rather than inferable.
+    #
+    # --provenance=false because buildkit's default provenance adds an attestation
+    # manifest whose `subject` references the image manifest, and the GitLab
+    # registry rejects the push with "blob unknown to registry" (observed
+    # 2026-09-22 on every registry-publish attempt; reproduced and fix verified
+    # by re-pushing the identical layers built with --provenance=false).
+    - |
+      docker build \
+        --provenance=false \
+        --build-arg APT_REFRESH=$CI_PIPELINE_ID \
+        --build-arg GIT_COMMIT=$CI_COMMIT_SHA \
+        --build-arg BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+        -t cpompa-ai-cloud/control-plane:$CI_COMMIT_SHA .
+  # Image is local-only (Mac mini) — no registry push yet, hence pull_policy:
+  # never in compose. This is a shell runner, so the daemon here is the same one
+  # deploy-dev uses: the SHA tag is how deploy-dev picks up exactly this
+  # artifact, and it is the handle rollback-dev re-points to.
+
+# --- P3.2: tofu plan on every MR, gated applies (docs/infra-roadmap.md P3) ---
+#
+# State lives in GitLab's managed HTTP backend (P3.1): TF_HTTP_* comes from the
+# job token, so no state credential is ever a CI variable. The apply jobs need
+# TF_VAR_* values — masked project variables (see docs/runbook-secrets.md);
+# masked rather than protected because protected variables do not reach
+# merge-request pipelines, and a plan that cannot see its inputs plans a lie.
+
+iac-plan:
+  stage: lint
+  tags: [mini]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
+    - export TF_STATE_NAME=app TF_HTTP_USERNAME=gitlab-ci-token
+    - export TF_HTTP_PASSWORD="$CI_JOB_TOKEN"
+    - export TF_HTTP_ADDRESS="$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/cpompa-ai-cloud-app"
+    - export TF_HTTP_LOCK_ADDRESS="$TF_HTTP_ADDRESS/lock" TF_HTTP_LOCK_METHOD=POST
+    - export TF_HTTP_UNLOCK_ADDRESS="$TF_HTTP_ADDRESS/unlock" TF_HTTP_UNLOCK_METHOD=DELETE
+    - tofu -chdir=infra/app init -input=false
+    - |
+      # Plan previews never write state, so they must not take the backend lock:
+      # this GitLab's terraform-state unlock endpoint 404s, which strands the
+      # lock and fails every later plan with "already locked". -lock=false
+      # sidesteps the broken endpoint; concurrent previews are safe.
+      # 2 = "changes present": that is the artifact we want to keep, not a failure.
+      # One atomic line — some runner shells abort the whole item on any
+      # intermediate nonzero exit, which used to eat the plan's exit-code guard.
+      tofu -chdir=infra/app plan -input=false -lock=false -detailed-exitcode -out=tfplan.bin || test $? -eq 2
+    - tofu -chdir=infra/app show -json tfplan.bin > plan.json
+  artifacts:
+    paths: [plan.json]
+    expire_in: 1 week
+    when: always
+
+# Manual on main, mirroring deploy-prod's gate: the prod flip is a deliberate act.
+iac-apply-prod:
+  stage: deploy-prod
+  tags: [mini]
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  script:
+    - export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
+    - export TF_HTTP_PASSWORD="$CI_JOB_TOKEN" TF_HTTP_USERNAME=gitlab-ci-token
+    - export TF_HTTP_ADDRESS="$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/cpompa-ai-cloud-app"
+    - export TF_HTTP_LOCK_ADDRESS="$TF_HTTP_ADDRESS/lock" TF_HTTP_LOCK_METHOD=POST
+    - export TF_HTTP_UNLOCK_ADDRESS="$TF_HTTP_ADDRESS/unlock" TF_HTTP_UNLOCK_METHOD=DELETE
+    # The cutover knobs: the prod port (was 8030 under compose), the exact image
+    # this pipeline built (P3.5 registry), and the prod identity. All come from
+    # project variables so a rerun re-points at the same truth.
+    - tofu -chdir=infra/app init -input=false
+    - tofu -chdir=infra/app apply -input=false -auto-approve
+
+# P3.4: scheduled (DRIFT_CHECK=true schedule, created after merge). A non-zero exit
+# means the box drifted from state — someone hand-fixed it, which is exactly how
+# a compose stack rots. Lock is not taken: this job must never block a real apply.
+drift-check:
+  stage: maintenance
+  tags: [mini]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $DRIFT_CHECK == "true"
+  script:
+    - export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
+    - export TF_HTTP_PASSWORD="$CI_JOB_TOKEN" TF_HTTP_USERNAME=gitlab-ci-token
+    - export TF_HTTP_ADDRESS="$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/cpompa-ai-cloud-app"
+    - export TF_HTTP_LOCK_ADDRESS="$TF_HTTP_ADDRESS/lock" TF_HTTP_LOCK_METHOD=POST
+    - export TF_HTTP_UNLOCK_ADDRESS="$TF_HTTP_ADDRESS/unlock" TF_HTTP_UNLOCK_METHOD=DELETE
+    - tofu -chdir=infra/app init -input=false
+    - tofu -chdir=infra/app plan -input=false -detailed-exitcode -lock=false
+    - echo "no drift"
+
+# P3.5: the built image gets a registry home. Until deploy switches to pulling
+# from it, this is additive — but it is what makes DR on a second host
+# "pull a SHA and restore a dump" instead of "hope CI can rebuild".
+registry-publish:
+  stage: security-image
+  tags: [mini]
+  needs: [build]
+  variables:
+    # A per-job docker config, not the runner's shared ~/.docker: that one uses credsStore "desktop"
+    # (macOS keychain), and two MR pipelines logging in at once race on the keychain and one
+    # dies with "The specified item already exists in the keychain (-25299)" — observed
+    # 2026-09-22 when two MR pipelines ran registry-publish concurrently on the mini.
+    # A bare config in the job directory stores the credential in the file, not the
+    # keychain, so concurrent jobs never meet.
+    DOCKER_CONFIG: "$CI_PROJECT_DIR/.ci-docker-config"
+  script:
+    - mkdir -p "$DOCKER_CONFIG" && printf '{}' > "$DOCKER_CONFIG/config.json"
+    - echo "$CI_JOB_TOKEN" | docker login "$CI_REGISTRY" -u gitlab-ci-token --password-stdin
+    - docker tag cpompa-ai-cloud/control-plane:$CI_COMMIT_SHA "$CI_REGISTRY_IMAGE/control-plane:$CI_COMMIT_SHA"
+    - docker push "$CI_REGISTRY_IMAGE/control-plane:$CI_COMMIT_SHA"
+  after_script:
+    # The config written above holds the job token in cleartext, and $DOCKER_CONFIG sits
+    # inside the shell runner's *persistent* workspace — so without this, a credential
+    # the repo's own rule says must never be persisted survives the job on the runner's
+    # disk, for the next job (or anyone reading the workspace) to find. The token is
+    # job-scoped and short-lived, so this is hygiene rather than an incident: logout
+    # drops the auth entry, rm drops the file.
+    - docker logout "$CI_REGISTRY" || true
+    - rm -rf "$DOCKER_CONFIG"
+
+# These two need the artifact, so they run after build rather than in `security`.
+deps-audit:
+  stage: security-image
+  tags: [mini]
+  needs: [build]
+  script:
+    # Audit the LOCK, in a scratch container with a pinned uv, so the set audited is
+    # the set the image installed — hash for hash. This used to re-resolve
+    # pyproject.toml here, which meant a green audit could describe versions no image
+    # ever contained. It cannot run inside the image any more, and that is the point:
+    # the image ships no package manager.
+    - docker run --rm -v "$CI_PROJECT_DIR:/src" -w /src python:3.11-slim sh -c "pip install -q uv==$UV_VERSION pip-audit && uv export --frozen --no-dev --no-emit-project --format requirements-txt -o /tmp/reqs.txt && pip-audit -r /tmp/reqs.txt --progress-spinner off"
+
+image-scan:
+  stage: security-image
+  tags: [mini]
+  needs: [build]
+  script:
+    # OS packages plus language packages inside the built image, which is what an
+    # attacker actually gets. The vulnerability database is cached on a named volume:
+    # re-downloading it on every pipeline run is what makes teams disable the scan.
+    # --ignore-unfixed fails only on findings we can act on.
+    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v cpompa-trivy-cache:/root/.cache/trivy aquasec/trivy:0.58.1 image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress cpompa-ai-cloud/control-plane:$CI_COMMIT_SHA
+
+deploy-dev:
+  stage: deploy-dev
+  tags: [mini]
+  only: [dev]
+  script:
+    - set -a && source /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud/.env && set +a
+    # Compose is read from the dedicated deploy worktree ($DEPLOY_CHECKOUT), pinned
+    # to the commit being deployed. The interactive checkout is only read from
+    # (its .env, and as the object store for the fetch) — never checked out, so a
+    # session's uncommitted WIP there can neither break nor be destroyed by a deploy.
+    - git -C /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud fetch --quiet origin
+    - |
+      if git -C /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud worktree list --porcelain | grep -qF "$DEPLOY_CHECKOUT"; then
+        git -C "$DEPLOY_CHECKOUT" checkout -f --detach "$CI_COMMIT_SHA"
+      else
+        git -C /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud worktree add --detach "$DEPLOY_CHECKOUT" "$CI_COMMIT_SHA"
+      fi
+    # compose/.env is untracked (it holds POSTGRES_PASSWORD), so the worktree does
+    # not get it from git — copy it in from the interactive checkout, which owns it.
+    - cp /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud/compose/.env "$DEPLOY_CHECKOUT/compose/.env"
+    - cd "$DEPLOY_CHECKOUT/compose"
+    # Deploy the exact artifact the build stage produced — no second build.
+    # deploy-dev and build share this shell runner, so the inspect below is
+    # checking the very daemon the build job tagged a moment ago; if the image
+    # is missing, fail here with a clear message rather than deep in compose.
+    - docker image inspect cpompa-ai-cloud/control-plane:$CI_COMMIT_SHA >/dev/null
+    # Migrations run BEFORE the new code comes up, so schema and code land
+    # together instead of the new code serving against yesterday's columns
+    # (the 0015_units incident: /account and /usage 500'd until someone ran
+    # `alembic upgrade head` by hand). Postgres is brought up first — it
+    # already runs on a live stack, and on a fresh one this creates it —
+    # because the migration needs a database to talk to.
+    # NOTE: the compose project name is derived from the working directory
+    # ("compose"), so postgres must be brought up from compose/ exactly like
+    # the full stack below — a different cwd here would mint a second stack.
+    # (No `cd compose` here: the script is already in the compose directory
+    # from the pin step above.)
+    - docker compose up -d --no-build postgres --wait --wait-timeout 60
+    - bash ../scripts/migrate_db.sh dev .. "$CI_COMMIT_SHA"
+    # --wait blocks until control-plane reports healthy and exits non-zero if it
+    # never does, so a green deploy-dev means the app actually came up — not
+    # merely that an image built.
+    - |
+      if ! IMAGE_TAG=$CI_COMMIT_SHA docker compose up -d --no-build --wait --wait-timeout 180; then
+        echo "=== deploy-dev FAILED: control-plane did not become healthy ==="
+        docker compose ps
+        docker compose logs --tail 60 control-plane || true
+        exit 1
+      fi
+    # Identity, not just liveness. `--wait` proves that something healthy answered;
+    # it does not prove *which* artifact answered, so a stack that silently kept the
+    # previous image (a skipped recreate, a compose file resolving an older tag) goes
+    # green here. Ask the container itself -- this needs no credential, and it is the
+    # same command dev and prod can both use.
+    #
+    # This replaces an inference that was wrong (2026-09-16): a merged change was
+    # believed live because an unauthenticated probe answered 401. The auth gate
+    # answers before routing, so a path that does not exist answers 401 as well.
+    - |
+      RUNNING=$(docker compose exec -T control-plane python3 -c "from cpompa_cloud import build_info; print(build_info.commit())" | tr -d '\r')
+      echo "control-plane reports commit: $RUNNING"
+      if [ -z "$RUNNING" ]; then
+        echo "   (the container could not be asked what it is -- the exec above failed; a build made before build_info existed reports nothing at all)"
+      fi
+      if [ "$RUNNING" != "$CI_COMMIT_SHA" ]; then
+        echo "=== deploy-dev FAILED: control-plane is running '$RUNNING', this pipeline built '$CI_COMMIT_SHA' ==="
+        exit 1
+      fi
+    - docker compose ps
+  environment: dev
+
+# Manual rollback lever. Trigger from the UI (or `glab ci run`) with
+# IMAGE_TAG=<sha of an earlier build>; allow_failure keeps it from blocking
+# normal dev pipelines, since a rollback is only sometimes wanted.
+rollback-dev:
+  stage: deploy-dev
+  tags: [mini]
+  only: [dev]
+  when: manual
+  allow_failure: true
+  script:
+    - set -a && source /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud/.env && set +a
+    - bash /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud/scripts/rollback_dev.sh "$IMAGE_TAG"
+  environment: dev
+
+# The live smoke, against the stack deploy-dev just replaced: the operator console
+# (companies, users, the role gate) and the cpac_ key lifecycle, all over real HTTP to
+# the running app. Manual because it needs a healthy stack and runs in seconds - a gate
+# you invoke after a deploy, not a queue item. It deletes every row it creates and
+# asserts the delete, so pointing it at dev leaves dev exactly as it found it.
+smoke-dev:
+  stage: deploy-dev
+  tags: [mini]
+  only: [dev]
+  when: manual
+  needs: [deploy-dev]
+  script:
+    - bash scripts/smoke_live.sh compose-control-plane-1
+  environment: dev
+
+# Production promotion: the second compose project (cpompa-prod, :8030) on the same
+# mini. Manual on purpose - a prod deploy is a decision, not a consequence of merging.
+#
+# This job used to fail deliberately, and the failure was honest: dev and prod were
+# the SAME stack on :8020, so a "prod deploy" could only be cosmetic. It now does the
+# real thing, which is why the deliberate failure is gone rather than left in place.
+# What it does NOT do is move customer traffic: api.cpompa.com is still served by the
+# dev stack until the Cloudflare ingress is flipped, and that is gated on the data
+# question in docs/runbook-prod.md, not on this job.
+deploy-prod:
+  stage: deploy-prod
+  tags: [mini]
+  only: [main]
+  when: manual
+  # Two prod deploys at once recreate the same containers under each other: on
+  # 2026-09-17 a hand-run compose racing this job left control-plane crash-looping with
+  # an InvalidPasswordError that read exactly like a credential bug and was not one.
+  # One resource group makes GitLab run them one at a time; a rollback takes the same
+  # group, because a rollback landing under a deploy is the same accident.
+  resource_group: prod-stack
+  # The security verdict must belong to the commit being promoted, which is why this is
+  # `needs` on the jobs of THIS pipeline rather than "the scan passed on dev last week".
+  needs: [build, secrets-scan, config-scan, deps-audit, image-scan]
+  variables:
+    DEPLOY_MIN_FREE_MB: "500"
+    DEPLOY_MIN_FREE_GB: "5"
+  script:
+    # Compose and alembic are both read from the dedicated deploy worktree
+    # ($DEPLOY_CHECKOUT), pinned to the commit being promoted — not from the
+    # interactive checkout and not from the pipeline's own copy. Without pinning, a
+    # prod deploy composes prod's stack from whatever file is lying around and
+    # applies whatever revisions it happens to carry to prod's database.
+    # Observed 2026-09-17: promoting 7882af5 applied 0019_request_claims to prod, a
+    # revision that existed only on dev. Observed 2026-09-19: pipeline #1259 could
+    # not deploy at all because the interactive checkout held uncommitted WIP.
+    - git -C /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud fetch --quiet origin
+    - |
+      if git -C /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud worktree list --porcelain | grep -qF "$DEPLOY_CHECKOUT"; then
+        git -C "$DEPLOY_CHECKOUT" checkout -f --detach "$CI_COMMIT_SHA"
+      else
+        git -C /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud worktree add --force --detach "$DEPLOY_CHECKOUT" "$CI_COMMIT_SHA"
+      fi
+    # .env / .env.prod are untracked (they hold credentials), so copy them in from
+    # the interactive checkout, which owns them.
+    - cp /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud/compose/.env "$DEPLOY_CHECKOUT/compose/.env"
+    - cp /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud/compose/.env.prod "$DEPLOY_CHECKOUT/compose/.env.prod"
+    - cd "$DEPLOY_CHECKOUT/compose"
+    # Unset the pipeline's test placeholder so compose interpolation falls back to
+    # --env-file .env.prod. Compose gives shell env precedence over --env-file, and
+    # the pipeline exports STRIPE_SECRET_KEY globally ("ci-placeholder-not-a-real-key")
+    # for tests — without this, that placeholder won and prod booted resolving 0
+    # Stripe prices (every paid caller 402s) while health stayed green. Observed
+    # 2026-09-20 on pipeline #1280. Do NOT blanket-source .env.prod here: sourcing
+    # strips the double quotes from JSON values (UNIT_RATES) and resolve_plan()
+    # fails closed on the mangled JSON.
+    - unset STRIPE_SECRET_KEY
+    # Preflight: this box also serves dev, inference and a desktop session. A prod
+    # deploy that takes the last of its memory or disk brings dev down with it, and
+    # that reads as "prod broke" rather than "the box is full" - so check before, not
+    # after. The idle cpompa-app OpenTofu stack is the usual thing to reclaim.
+    - |
+      free_mb=$(vm_stat | awk '/Pages free/ {a=$3} /Pages inactive/ {b=$3} /Pages purgeable/ {c=$3} END {print int((a+b+c)*16384/1048576)}')
+      disk_gb=$(df -g / | awk 'NR==2 {print $4}')
+      echo "preflight: ~${free_mb}MB reclaimable memory, ${disk_gb}GB free on /"
+      if [ "$free_mb" -lt "$DEPLOY_MIN_FREE_MB" ]; then
+        echo "ERROR: only ~${free_mb}MB reclaimable memory, need ${DEPLOY_MIN_FREE_MB}MB."
+        echo "Reclaim first (docker ps; the unused cpompa-app stack on :8031 is the usual suspect)."
+        exit 1
+      fi
+      if [ "$disk_gb" -lt "$DEPLOY_MIN_FREE_GB" ]; then
+        echo "ERROR: only ${disk_gb}GB free on /, need ${DEPLOY_MIN_FREE_GB}GB."
+        exit 1
+      fi
+    # compose/.env.prod is untracked and holds prod's real secrets, so a missing file
+    # must stop the job with instructions rather than let compose interpolate blanks
+    # and boot a stack that 402s every paying customer.
+    - |
+      if [ ! -f .env.prod ]; then
+        echo "ERROR: compose/.env.prod is missing on this runner - this job deploys nothing."
+        echo "Create it from compose/.env.prod.example (see docs/runbook-prod.md), then retry."
+        exit 1
+      fi
+    # Deploy the exact artifact the build stage produced - no second build. build and
+    # deploy-prod share this shell runner, so this inspects the very daemon that
+    # tagged the image a moment ago.
+    - docker image inspect cpompa-ai-cloud/control-plane:$CI_COMMIT_SHA >/dev/null
+    # Same ordering as deploy-dev: postgres up, migrations applied, and only
+    # then the new code. Prod's Postgres publishes no host port, so
+    # migrate_db.sh relays through a throwaway container on cpompa-prod_default.
+    - docker compose -p cpompa-prod --env-file .env.prod -f docker-compose.prod.yml up -d --no-build postgres --wait --wait-timeout 60
+    - bash ../scripts/migrate_db.sh prod .. "$CI_COMMIT_SHA"
+    # --wait blocks until prod's control-plane reports healthy and fails the job if it
+    # never does, so a green deploy-prod means prod is actually serving.
+    - |
+      if ! IMAGE_TAG=$CI_COMMIT_SHA docker compose -p cpompa-prod --env-file .env.prod -f docker-compose.prod.yml up -d --no-build --wait --wait-timeout 180; then
+        echo "=== deploy-prod FAILED: prod control-plane did not become healthy ==="
+        docker compose -p cpompa-prod -f docker-compose.prod.yml ps
+        docker compose -p cpompa-prod -f docker-compose.prod.yml logs --tail 60 control-plane || true
+        exit 1
+      fi
+    # Same identity check as deploy-dev, and it matters more here: prod is promoted by
+    # hand, so "did the promotion actually land?" is a question someone asks later, from
+    # a laptop, with no pipeline log in front of them. A green job now means the promoted
+    # commit is the commit prod is serving.
+    - |
+      RUNNING=$(docker compose -p cpompa-prod --env-file .env.prod -f docker-compose.prod.yml exec -T control-plane python3 -c "from cpompa_cloud import build_info; print(build_info.commit())" | tr -d '\r')
+      echo "prod control-plane reports commit: $RUNNING"
+      if [ -z "$RUNNING" ]; then
+        echo "   (the container could not be asked what it is -- the exec above failed; a build made before build_info existed reports nothing at all)"
+      fi
+      if [ "$RUNNING" != "$CI_COMMIT_SHA" ]; then
+        echo "=== deploy-prod FAILED: prod control-plane is running '$RUNNING', this pipeline built '$CI_COMMIT_SHA' ==="
+        exit 1
+      fi
+    # --wait and the identity check above both pass on a container that comes up and then
+    # dies: on 2026-09-17 prod was green at this point and crash-looping minutes later.
+    # Sample the container's health and restart count across a window, so a green
+    # deploy-prod means "prod is still up" rather than "prod was up when the healthcheck
+    # last looked". Sampling the healthcheck is the gate; a bare sleep is not, and no
+    # fixed sleep would have caught a container dying 30s in.
+    - |
+      window_end=$((SECONDS + 60))
+      samples=0
+      while [ "$SECONDS" -lt "$window_end" ]; do
+        status=$(docker inspect -f '{{.State.Health.Status}}' cpompa-prod-control-plane-1 2>/dev/null || echo missing)
+        restarts=$(docker inspect -f '{{.RestartCount}}' cpompa-prod-control-plane-1 2>/dev/null || echo unknown)
+        samples=$((samples + 1))
+        if [ "$status" != "healthy" ] || [ "$restarts" != "0" ]; then
+          echo "=== deploy-prod FAILED: control-plane is '$status' with restarts=$restarts after the deploy ==="
+          docker compose -p cpompa-prod -f docker-compose.prod.yml ps
+          docker compose -p cpompa-prod -f docker-compose.prod.yml logs --tail 60 control-plane || true
+          exit 1
+        fi
+        sleep 5
+      done
+      # The published port is the one a customer actually reaches; the healthcheck only
+      # proves the app answers inside its own namespace.
+      port=$(docker port cpompa-prod-control-plane-1 8000/tcp 2>/dev/null | head -1 | sed 's/.*://' || true)
+      if [ -n "$port" ]; then
+        code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${port}/health" || echo 000)
+        if [ "$code" != "200" ]; then
+          echo "=== deploy-prod FAILED: prod's published port ${port} answered ${code}, not 200 ==="
+          exit 1
+        fi
+        echo "liveness: ${samples} samples healthy, restarts=0, port ${port} answered 200"
+      else
+        echo "liveness: ${samples} samples healthy, restarts=0 (no published port to probe)"
+      fi
+    - docker compose -p cpompa-prod -f docker-compose.prod.yml ps
+  environment: prod
+
+# Prod's undo lever, mirroring rollback-dev. Manual with allow_failure, because a
+# rollback is only sometimes wanted; the script itself is health-gated, so a rollback
+# that does not come up exits non-zero and prints status and logs. Note it takes the
+# same IMAGE_TAG the image tags carry, and refuses to guess when the tag is absent
+# locally — a rollback that silently deploys something unexpected is worse than none.
+rollback-prod:
+  stage: deploy-prod
+  tags: [mini]
+  only: [main]
+  when: manual
+  allow_failure: true
+  # Same group as deploy-prod: a rollback and a deploy both recreate this stack.
+  resource_group: prod-stack
+  script:
+    - bash /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud/scripts/rollback_prod.sh "$IMAGE_TAG"
+  environment: prod
+
+# --- cutover ----------------------------------------------------------------------
+# Moving the live tenancy between stacks is a decision; the mechanics are not. Both jobs
+# call the same script the runbook describes, so the step that moves customer data is
+# reviewable in GitLab rather than typed into a laptop shell at 2am.
+#
+# cutover-rehearse is the important one. It exercises the entire migration against a
+# scratch database on the target host — create, load the schema, copy, verify counts and
+# referential integrity, re-run to prove idempotency, drop — so the procedure is tested
+# before the night it matters. Manual, because it briefly creates a database alongside
+# prod's. This is the job that found both bugs in the tool: the parse-time CASE guard and
+# a missing `docker exec -i`.
+cutover-rehearse:
+  stage: cutover
+  tags: [mini]
+  only: [dev, main]
+  when: manual
+  script:
+    - cd /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud
+    - .venv/bin/python scripts/migrate_tenancy.py --rehearse
+
+# migrate-tenancy is the real thing: the dry run prints the plan and both sides' counts,
+# then --apply dumps both databases (separately), copies, and verifies. It refuses a
+# non-empty target unless --merge is given, and writes only to the recognised database.
+migrate-tenancy:
+  stage: cutover
+  tags: [mini]
+  only: [main]
+  when: manual
+  needs: [build, secrets-scan, config-scan, deps-audit, image-scan]
+  script:
+    - cd /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud
+    - .venv/bin/python scripts/migrate_tenancy.py
+    - .venv/bin/python scripts/migrate_tenancy.py --apply
+  environment: prod
+
+# Image hygiene. Every pipeline tags a ~414MB image that is never "dangling", so
+# nothing collects it and the store only ever grows; --build-cache also clears
+# the layer cache each build leaves behind. Manual, like rollback-dev, so it can
+# never block a deploy.
+prune-images:
+  stage: maintenance
+  tags: [mini]
+  only: [dev]
+  when: manual
+  allow_failure: true
+  script:
+    - bash /Volumes/SSD_2/XCode_Repos/myprojects/cpompa-ai-cloud/scripts/prune_images.sh --build-cache
+    - docker system df
+  environment: dev
+
+# Phase 3: router regression gate. Manual and model-backed — needs live
+# models (LM Studio on the mini), so it never runs in MR pipelines; an
+# operator fires it after catalog changes. Gate artifacts land in eval_runs/
+# on the runner node with the verdict stamped alongside the metrics.
+eval-regression-gate:
+  extends: .uv-bootstrap
+  stage: maintenance
+  tags: [mini]
+  only: [dev]
+  when: manual
+  script:
+    - ./scripts/eval/run_gate.sh
