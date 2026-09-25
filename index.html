@@ -43,7 +43,7 @@
   /* diagram */
   .diagram{width:100%;height:auto;margin:.5rem 0}
   .note{font-size:.85rem;color:var(--muted)}
-  /* metering demo */
+
   .demo{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem}
   .qbtn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:.75rem;font-weight:700;cursor:pointer;vertical-align:middle;margin-left:.4rem}
   .qbtn:hover{color:var(--accent);border-color:var(--accent)}
@@ -62,9 +62,6 @@
   .plan .price{font-size:1.3rem;font-weight:700;margin-top:.2rem}
   .plan .est{font-size:.8rem;color:var(--muted)}
   .plan.hot{border-color:var(--accent)}
-  .unit-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.5rem;background:#fff}
-  .unit-table th,.unit-table td{border:1px solid var(--border);padding:.35rem .5rem;text-align:left}
-  .unit-table th{background:var(--card);font-size:.78rem}
   .benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
   .benefits .card{margin-bottom:0}
   .benefits ul{padding-left:1.1rem;font-size:.88rem;color:var(--muted)}
@@ -86,13 +83,13 @@
     <span class="live" id="live-status" style="text-decoration:none"><span class="dot"></span> Control plane — checking…</span>
   </p>
   <p class="cta">
-    <a class="btn" href="#metering">▶ Try the interactive metering demo ↓</a>
+    <a class="btn" href="#iac-lab">▶ Explore the interactive IaC lab layout ↓</a>
     <a class="btn" style="background:var(--card);color:var(--accent);border:1px solid var(--border)" href="https://github.com/c-pompa/cpompa-ai-cloud-showcase" target="_blank" rel="noopener">View source &amp; docs on GitHub</a>
     <a href="#projects" style="margin-left:.5rem">See the work ↓</a>
   </p>
   <p class="note" style="margin-top:.75rem">The production control plane at <strong>api.cpompa.com</strong> is
-  auth-gated and cross-origin status checks are blocked, so this page can't probe it from your browser — the
-  metering demo below is fully interactive, and the CI activity chart is rendered from real GitLab pipeline history.</p>
+  live and health-checked from this page (dot above). Below: an interactive layout of the VLAN&nbsp;15 lab
+  every service actually runs on, and the CI activity chart rendered from real GitLab pipeline history.</p>
 </header>
 
 <section id="about">
@@ -246,7 +243,7 @@
 
   <!-- ══ Model fleet lane ══ -->
   <text x="600" y="206" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">MODEL FLEET</text>
-  <g filter="url(#sh)"><title>Self-hosted serving fleet behind a custom router with health checks and role-based fallback. Unit prices in the metering demo are derived from these machines' measured serving cost — the numbers are real, not marketing.</title>
+  <g filter="url(#sh)"><title>Self-hosted serving fleet behind a custom router with health checks and role-based fallback. The fleet runs on owned hardware — see the IaC lab layout below for the network it lives on.</title>
     <rect x="600" y="216" width="260" height="134" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
   </g>
   <rect x="612" y="228" width="236" height="30" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
@@ -272,85 +269,42 @@
 </svg>
 </section>
 
-<section id="metering">
-  <h2 style="display:flex;align-items:center;justify-content:space-between">Metering demo — how units are priced
-    <span><button id="meter-q" class="qbtn" aria-expanded="false" title="Show meter details">?</button></span></h2>
-  <p class="note">One unit is the <b>measured serving cost of one chat turn</b> on the small model. Every user
-  gets <b>$1/mo Starter with 500 free units</b>; usage beyond that is bought as top-ups at the same published
-  rate — <b>$1 = 2,000 units</b>. No request caps, no 5-hour windows. Drag the slider:</p>
+<section id="iac-lab">
+  <h2>IaC lab layout — VLAN&nbsp;15, the network everything runs on</h2>
+  <p class="note">Every project on this page runs on hardware I own and segment myself. The lab was rebuilt
+  in September&nbsp;2026 onto a dedicated <b>VLAN&nbsp;15 (10.88.15.0/24, domain ai.internal)</b> — the old
+  flat 10.88.1.x network was decommissioned the same day. Click a node:</p>
 
   <div class="demo">
-    <label for="tok">Tokens per month: <span id="tokval">2,000,000</span></label>
-    <input type="range" id="tok" min="100000" max="40000000" step="100000" value="2000000">
-    <div class="plans" id="plans"></div>
-    <p class="note" id="over" style="margin-top:.75rem"></p>
+    <div id="lan-map" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem"></div>
+    <p class="note" id="lan-detail" style="margin-top:.9rem"></p>
   </div>
 
-  <div id="meter-detail" class="detail" hidden>
-    <h3>What typical work costs (real measured rates)</h3>
-    <table class="unit-table">
-      <tr><th>workload</th><th>shape</th><th>our cost</th><th>units charged</th><th>user pays</th></tr>
-      <tr><td>Small chat turn</td><td>600 in / 250 out</td><td>$0.000126</td><td>1</td><td>$0.0005</td></tr>
-      <tr><td>Small coding task</td><td>8k in / 800 out</td><td>$0.000571</td><td>4</td><td>$0.002</td></tr>
-      <tr><td>27B chat turn</td><td>600 in / 250 out</td><td>$0.000829</td><td>6</td><td>$0.003</td></tr>
-      <tr><td>27B coding task</td><td>8k in / 800 out</td><td>$0.003346</td><td>24</td><td>$0.012</td></tr>
-      <tr><td>27B agent turn</td><td>30k in / 2k out</td><td>$0.009505</td><td>67</td><td>$0.0335</td></tr>
-    </table>
-    <p class="note">Margin is nearly flat across every shape (71.5%–74.8%) <i>because</i> the meter follows
-    cost — routing to a bigger model is a priced decision, never a silent loss.</p>
-
-    <h3>Why meter in units instead of requests?</h3>
-    <p class="note">A chat user makes one call per message. An agent task makes <b>dozens</b> — a single
-    "summarise these invoices" run is a planning call, five tool calls, two retries and a synthesis
-    (30–100 LLM requests). Metering the <i>call</i> charges customers for our implementation detail; that's
-    why per-request allowances look generous in a demo and evaporate in a week of real agent use.
-    <b>The unit is the honest atom</b>: it maps to what a request actually costs us, weighted by model size
-    and context length.</p>
-
-    <div class="benefits">
+  <div class="benefits">
     <div class="card">
-      <h3>Benefit to the company</h3>
+      <h3>Why a dedicated VLAN</h3>
       <ul>
-        <li><b>Predictable, near-flat margin (~70%)</b> at every request shape — revenue scales 1:1 with
-        measured serving cost, so no surprise loss from heavy tenants.</li>
-        <li><b>Heavy users pay proportionally.</b> Usage beyond the grant flows into top-ups at the same
-        rate — expansion revenue without changing plans.</li>
-        <li><b>Priced routing.</b> Serving a 27B agent turn costs 67× a small chat turn; the unit weights
-        that automatically, so model mix is a margin decision, not a leak.</li>
-        <li><b>Test-enforced billing integrity</b> — the rate table is generated from measurements and a
-        CI test pins the meter to it.</li>
+        <li><b>Blast-radius control.</b> Prod (:8030) and dev (:8020) control planes, Postgres and Redis
+        all live on the mini inside VLAN&nbsp;15 — the rest of the home network can't reach the databases
+        even by accident.</li>
+        <li><b>Tailscale overlay on top.</b> GitLab (<code>gitlab.cpompa.com</code>), SSH and CI runners
+        ride a WireGuard mesh (100.73.11.35) — CI deploys over the relay, never over an exposed port.</li>
+        <li><b>IaC-managed lifecycle.</b> Services are declared in compose files, deployed by GitLab CI
+        with SHA-pinned images (<code>IMAGE_TAG=$CI_COMMIT_SHA</code>), health-gated
+        (<code>--wait</code>), with an automated prod rollback job.</li>
       </ul>
     </div>
     <div class="card">
-      <h3>Benefit to users</h3>
+      <h3>Live from api.cpompa.com</h3>
       <ul>
-        <li><b>Transparent and predictable:</b> you pay for tokens you actually use at a published rate,
-        not a black-box credit system or 5-hour refresh windows.</li>
-        <li><b>Agents are affordable:</b> no per-request caps means an agent that makes 50 calls for one
-        task pays for the tokens, not 50 "premium requests."</li>
-        <li><b>Try-before-you-scale:</b> 500 units free every month covers roughly 500 chat turns — real
-        evaluation before spending a cent.</li>
-        <li><b>Per-workload fairness:</b> light chat users aren't subsidizing heavy coding-agent users;
-        each workload is charged by its own cost.</li>
+        <li>Production control plane: <b><span id="iac-health" style="font-weight:700">checking…</span></b>
+        <span class="note">(probed from your browser, CORS-mode, cache-busted)</span></li>
+        <li>Sandbox demo on dev: read-only mode with seeded sample data — writes return
+        <b>405</b> with an <code>X-Sandbox</code> header, inference stays live. See MR&nbsp;!225.</li>
+        <li>Deploy path: <code>dev</code> → MR → security gates (secrets-scan, config-scan, deps-audit,
+        image-scan) → <code>main</code> → gated manual deploy.</li>
       </ul>
     </div>
-    <div class="card">
-      <h3>Why it's a good growth strategy</h3>
-      <ul>
-        <li><b>Land below the market floor.</b> Market entry has converged at $20/mo (Claude Pro, ChatGPT
-        Plus, Cursor). Entering at <b>$1/mo</b> is a 20× lower commitment — trivially easy to try, and
-        paid users validate demand from day one.</li>
-        <li><b>Usage-led expansion, not upsell friction.</b> Growth happens automatically as users consume
-        more top-ups — the pricing curve grows with the customer instead of forcing plan migrations.</li>
-        <li><b>Agents are the growth engine.</b> Agent workloads consume 30–100 requests per task, so
-        adoption of agentic tooling directly multiplies unit consumption — and the unit meter captures
-        all of it fairly.</li>
-        <li><b>Margin-proof to model deflation.</b> Because rates are derived from <i>our measured
-        hardware cost</i>, we can re-derive prices as models and hardware change — the same property
-        commodity API resellers (who rent compute) can't match.</li>
-      </ul>
-    </div>
-  </div>
   </div>
 </section>
 
@@ -360,50 +314,51 @@
 </footer>
 
 <script>
-// Real model (ADR-0005): Starter $1/mo, 500 units free grant; top-ups $1 = 2,000 units ($0.0005/unit).
-// 1 unit = 2k input + 256 output tokens on the small model (measured serving cost).
-const GRANT_UNITS = 500;
-const PRICE_PER_UNIT = 0.0005; // $1 = 2,000 units
-const fmt = n => n.toLocaleString('en-US');
-const money = n => n < 0.01 && n > 0 ? '$' + n.toFixed(4) : '$' + n.toFixed(2);
-const tok = document.getElementById('tok');
-const render = () => {
-  const tokens = +tok.value;
-  // tokens -> units: a unit is 2k in + 256 out ≈ 2,256 tokens
-  const units = Math.ceil(tokens/2256);
-  const billable = Math.max(0, units - GRANT_UNITS);
-  const topupCost = billable * PRICE_PER_UNIT;
-  // market comparison: cheapest comparable API entry is ~$0.60/$2.20 per 1M in/out on a 2:1 mix ≈ blended
-  const apiCost = tokens/1e6 * (0.6*2/3 + 2.2/3);
-  document.getElementById('tokval').textContent = fmt(tokens);
-  document.getElementById('plans').innerHTML = `
-    <div class="plan"><b>Free grant</b><div class="est">500 units / month, every month</div>
-      <div class="price">${units<=GRANT_UNITS?'$0.00':'$0.00'}</div>
-      <div class="est">${units<=GRANT_UNITS ? `${fmt(GRANT_UNITS-units)} units left` : 'grant fully used'}</div></div>
-    <div class="plan hot"><b>Top-ups owed</b><div class="est">$1 = 2,000 units, one-time</div>
-      <div class="price">${money(topupCost)}</div>
-      <div class="est">${fmt(billable)} billable units beyond grant</div></div>
-    <div class="plan"><b>vs. hosted APIs</b><div class="est">z.ai GLM-4.6 blended rate</div>
-      <div class="price">${money(apiCost)}</div>
-      <div class="est">${apiCost>0? (apiCost/topupCost).toFixed(1)+'× more expensive':'—'}</div></div>`;
-  document.getElementById('over').textContent =
-    `${fmt(tokens)} tokens ≈ ${fmt(units)} units (${fmt(GRANT_UNITS)} free) → ${money(topupCost)} in top-ups. $1/mo Starter + pay-per-unit beats a $20/mo window plan unless usage is extreme.`;
+
+// interactive VLAN 15 lab layout — click a node for details
+const LAN_NODES = [
+  { id: 'gw', name: 'UniFi Gateway', sub: 'VLAN 15 · 10.88.15.1', icon: '🛡️',
+    detail: '<b>UniFi gateway, 10.88.15.1.</b> Routes and firewall for VLAN 15 (10.88.15.0/24, domain ai.internal) — a dedicated segment rebuilt in September 2026 after the old flat 10.88.1.x network was decommissioned. Inter-VLAN rules keep the lab isolated from the rest of the home network.' },
+  { id: 'mini', name: 'Mini (M-series)', sub: '10.88.15.208 · Docker host', icon: '🖥️',
+    detail: '<b>Mac mini, 10.88.15.208 — the workhorse.</b> Docker host for the production control plane (api.cpompa.com, :8030) and the dev control plane (:8020, currently running the read-only sandbox demo), each with its own Postgres + Redis. Also runs the Hermes agent gateway and Honcho (agent memory). Deploys arrive via GitLab CI over the Tailscale relay with SHA-pinned images and health-gated <code>--wait</code>.' },
+  { id: 'desktop', name: 'Desktop2', sub: '10.88.15.168 · Docker/WSL2', icon: '🖧',
+    detail: '<b>Desktop2 (Windows, Docker Desktop on WSL2), 10.88.15.168.</b> Second Docker host for homelab services and experimentation (homelab stack on D:\\homelab). Reached over SSH as <code>homelab-pc</code>. Serves as the fallback node and the place where new services are staged before they earn a spot on the mini.' },
+  { id: 'fleet', name: 'Model fleet', sub: 'self-hosted LLM serving', icon: '🧠',
+    detail: '<b>Self-hosted model-serving fleet.</b> Quantized LLMs on owned hardware behind a custom router with health checks and role-based fallback — the serving layer the cpompa-ai-cloud control plane meters and routes to. The escalation router can burst to a hosted provider when local capacity runs out.' },
+  { id: 'tail', name: 'Tailscale overlay', sub: '100.73.11.35 · WireGuard mesh', icon: '🔗',
+    detail: '<b>Tailscale WireGuard mesh, 100.73.11.35.</b> Carries everything that should never touch a public port: GitLab (<code>gitlab.cpompa.com</code>), SSH sessions, CI deploy relays. Public surface is deliberately tiny — api.cpompa.com (health + auth-gated API) and nothing else.' },
+  { id: 'prod', name: 'api.cpompa.com', sub: 'prod control plane · :8030', icon: '☁️',
+    detail: '<b>Production control plane, api.cpompa.com (:8030).</b> FastAPI + Postgres/Redis multi-tenant platform: OpenAI-compatible metered inference endpoint, hosted agents with per-seat billing, fleet/node pairing, Stripe test-mode webhooks. Deployed only by GitLab CI from <code>main</code> after the full security gate; rollback is a one-click manual job.' },
+];
+const lanMap = document.getElementById('lan-map');
+const lanDetail = document.getElementById('lan-detail');
+lanMap.innerHTML = LAN_NODES.map((n, i) => `
+  <button class="plan" data-lan="${i}" style="cursor:pointer;text-align:left;font:inherit">
+    <div style="font-size:1.4rem">${n.icon}</div>
+    <b>${n.name}</b>
+    <div class="est">${n.sub}</div>
+  </button>`).join('');
+const showNode = i => {
+  lanDetail.innerHTML = LAN_NODES[i].detail;
+  lanMap.querySelectorAll('[data-lan]').forEach(b =>
+    b.style.borderColor = +b.dataset.lan === i ? 'var(--accent)' : '');
 };
-tok.addEventListener('input', render); render();
-
-// ? toggle for meter details
-const qbtn = document.getElementById('meter-q');
-const detail = document.getElementById('meter-detail');
-qbtn.addEventListener('click', () => {
-  const open = detail.hidden;
-  detail.hidden = !open;
-  qbtn.setAttribute('aria-expanded', String(open));
-  qbtn.title = open ? 'Hide meter details' : 'Show meter details';
+lanMap.addEventListener('click', e => {
+  const b = e.target.closest('[data-lan]');
+  if (b) showNode(+b.dataset.lan);
 });
+showNode(1); // default: the mini
 
-// live control-plane status — CORS-mode check: only reports "live" when /health
-// explicitly answers with CORS headers AND 200. Anything else = private/blocked.
-// (no-cors would resolve even on a 403 and fake a green dot — that bug is why this is CORS-mode.)
+// live api.cpompa.com health probe inside the IaC section
+(async () => {
+  const el = document.getElementById('iac-health');
+  try {
+    const res = await fetch('https://api.cpompa.com/health?v=' + Date.now(), {mode: 'cors', cache: 'no-store'});
+    el.textContent = res.ok ? 'LIVE — ' + (await res.text()).trim() : 'answered ' + res.status;
+    el.style.color = res.ok ? 'var(--accent)' : '';
+  } catch { el.textContent = 'unreachable from this browser (CORS or network)'; }
+})();
+
 (async () => {
   const el = document.getElementById('live-status');
   const set = (cls, title, text) => {
