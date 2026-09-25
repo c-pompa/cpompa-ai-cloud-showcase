@@ -35,6 +35,11 @@
   .stage small{color:var(--muted);font-size:.7rem}
   .sec{border-color:#fecaca;background:#fef2f2}
   .arrow{color:var(--muted);font-size:.8rem}
+  /* hover tooltips */
+  [data-tip]{position:relative;cursor:help}
+  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:0;z-index:9;background:var(--fg);color:var(--bg);padding:.4rem .6rem;border-radius:6px;font-size:.72rem;line-height:1.45;font-weight:400;text-align:left;white-space:normal;width:max-content;max-width:250px;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  .diagram g[title]{cursor:help}
+  .diagram g:hover rect,.diagram g:hover > rect{stroke:var(--accent)}
   /* diagram */
   .diagram{width:100%;height:auto;margin:.5rem 0}
   .note{font-size:.85rem;color:var(--muted)}
@@ -139,16 +144,17 @@
   <p class="note">Pulled straight from gitlab.cpompa.com via API: every MR, dev push, and gated prod deploy.</p>
   <div id="ci-root"></div>
   <script src="ci-activity-widget.js"></script>
+  <p class="note" style="margin-top:-1rem">Hover any bar, stat, or pipeline stage below for the detail behind the number.</p>
   <div class="pipe">
-    <div class="stage"><b>lint</b><small>ruff (pinned via uv.lock)</small></div><span class="arrow">→</span>
-    <div class="stage"><b>test</b><small>pytest suite</small></div><span class="arrow">→</span>
-    <div class="stage sec"><b>secrets-scan</b><small>gitleaks</small></div><span class="arrow">→</span>
-    <div class="stage sec"><b>config-scan</b><small>checkov (Dockerfile + CI config)</small></div><span class="arrow">→</span>
-    <div class="stage"><b>build</b><small>docker image, commit-baked identity</small></div><span class="arrow">→</span>
-    <div class="stage sec"><b>deps-audit</b><small>pip-audit on locked requirements</small></div><span class="arrow">→</span>
-    <div class="stage sec"><b>image-scan</b><small>trivy (HIGH/CRITICAL, exit 1)</small></div><span class="arrow">→</span>
-    <div class="stage"><b>deploy-dev</b><small>SHA-pinned, --wait healthcheck</small></div><span class="arrow">→</span>
-    <div class="stage"><b>deploy-prod</b><small>manual, scanner-gated</small></div>
+    <div class="stage" data-tip="ruff with lint + bandit rules, pinned via uv.lock — style issues and obvious security smells caught in seconds, before anything expensive runs."><b>lint</b><small>ruff (pinned via uv.lock)</small></div><span class="arrow">→</span>
+    <div class="stage" data-tip="The full pytest suite runs against the exact locked dependency pins — tests pass on my machine AND in CI, or the MR fails."><b>test</b><small>pytest suite</small></div><span class="arrow">→</span>
+    <div class="stage sec" data-tip="gitleaks scans the diff and history so an API key or token never reaches the repo — fail-closed, no override in the pipeline."><b>secrets-scan</b><small>gitleaks</small></div><span class="arrow">→</span>
+    <div class="stage sec" data-tip="checkov audits the Dockerfile and CI config against infrastructure-as-code security policies (privileged containers, unpinned images, etc.)."><b>config-scan</b><small>checkov (Dockerfile + CI config)</small></div><span class="arrow">→</span>
+    <div class="stage" data-tip="Docker image built with the commit SHA baked in — every deploy is pinned to an immutable, reproducible artifact with automated rollback available."><b>build</b><small>docker image, commit-baked identity</small></div><span class="arrow">→</span>
+    <div class="stage sec" data-tip="pip-audit checks every locked requirement against known CVE databases — a vulnerable transitive dependency blocks the MR."><b>deps-audit</b><small>pip-audit on locked requirements</small></div><span class="arrow">→</span>
+    <div class="stage sec" data-tip="trivy scans the final built image for OS + package CVEs — any HIGH or CRITICAL finding exits 1 and blocks deployment."><b>image-scan</b><small>trivy (HIGH/CRITICAL, exit 1)</small></div><span class="arrow">→</span>
+    <div class="stage" data-tip="Deploys to the dev environment pinned to the exact commit SHA, with docker compose --wait verifying container health before the job passes."><b>deploy-dev</b><small>SHA-pinned, --wait healthcheck</small></div><span class="arrow">→</span>
+    <div class="stage" data-tip="Prod never moves automatically: a human triggers it, and the job is gated so it cannot run unless every scanner stage passed on that exact SHA."><b>deploy-prod</b><small>manual, scanner-gated</small></div>
   </div>
   <p class="note">Plus: compose/IaC validation, lockfile drift checks, rollback jobs, a prod cutover rehearsal,
   and an eval-regression gate that fails CI when retrieval quality drops.</p>
@@ -173,7 +179,7 @@
   </defs>
 
   <!-- production badge -->
-  <g filter="url(#sh)">
+  <g filter="url(#sh)"><title>Live status: this control plane runs in production at api.cpompa.com — /health is publicly reachable and checked continuously.</title>
     <rect x="596" y="12" width="264" height="26" rx="13" fill="#f0fdf4" stroke="#bbf7d0"/>
     <circle cx="614" cy="25" r="4.5" fill="#059669"/>
     <text x="628" y="29" font-size="11" fill="#047857" font-weight="600">PRODUCTION · api.cpompa.com · health-checked</text>
@@ -181,7 +187,7 @@
 
   <!-- ══ Clients lane ══ -->
   <text x="20" y="86" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">CLIENTS</text>
-  <g filter="url(#sh)">
+  <g filter="url(#sh)"><title>Who talks to the platform: developers via an OpenAI-compatible API (existing OpenAI SDKs work unmodified), agent owners deploying cloud Hermes agents, and Stripe driving subscriptions via webhooks.</title>
     <rect x="20" y="96" width="170" height="58" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
     <text x="105" y="120" text-anchor="middle" font-weight="600">Developers</text>
     <text x="105" y="138" text-anchor="middle" fill="#64748b" font-size="10.5">OpenAI-compatible API</text>
@@ -200,7 +206,7 @@
   <text x="196" y="118" font-size="10" fill="#94a3b8">HTTPS · API keys</text>
 
   <!-- ══ Control plane ══ -->
-  <g filter="url(#sh)">
+  <g filter="url(#sh)"><title>The multi-tenant FastAPI control plane — every request is authenticated by tenant API key, metered in units, and rate-limited. Plan entitlements come from Stripe price IDs and fail closed: an unknown price grants nothing.</title>
     <rect x="250" y="70" width="290" height="280" rx="10" fill="#ffffff" stroke="#bfdbfe"/>
     <rect x="250" y="70" width="290" height="34" rx="10" fill="url(#cpHead)"/>
     <rect x="250" y="92" width="290" height="12" fill="#2563eb"/>
@@ -229,7 +235,7 @@
   <!-- ══ Datastores lane ══ -->
   <rect x="590" y="74" width="282" height="290" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
   <text x="600" y="86" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">RUNTIME — DATA &amp; COMPUTE</text>
-  <g filter="url(#sh)">
+  <g filter="url(#sh)"><title>PostgreSQL holds tenancy, metering and billing data (schema changes go through alembic migrations). Redis handles rate-limit leases and transient-error retries — see the deadlock-retry work in the repo.</title>
     <rect x="600" y="96" width="124" height="86" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
     <text x="662" y="130" text-anchor="middle" font-weight="600">PostgreSQL</text>
     <text x="662" y="148" text-anchor="middle" fill="#64748b" font-size="10">tenancy · metering</text>
@@ -242,7 +248,7 @@
 
   <!-- ══ Model fleet lane ══ -->
   <text x="600" y="206" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">MODEL FLEET</text>
-  <g filter="url(#sh)">
+  <g filter="url(#sh)"><title>Self-hosted serving fleet behind a custom router with health checks and role-based fallback. Unit prices in the metering demo are derived from these machines' measured serving cost — the numbers are real, not marketing.</title>
     <rect x="600" y="216" width="260" height="134" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
   </g>
   <rect x="612" y="228" width="236" height="30" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
