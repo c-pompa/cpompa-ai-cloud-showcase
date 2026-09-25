@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Christian Pompa — AI Infrastructure &amp; DevOps Engineer</title>
+<style>
+  :root{
+    --bg:#ffffff; --fg:#18181b; --muted:#6b7280; --border:#e5e7eb;
+    --accent:#2563eb; --card:#f9fafb; --green:#059669; --red:#dc2626;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;max-width:880px;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  h1{font-size:2rem;letter-spacing:-.02em}
+  h2{font-size:1.25rem;margin:2.5rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+  h3{font-size:1rem;margin:1.4rem 0 .3rem}
+  .sub{color:var(--muted);margin-top:.25rem}
+  .contact{margin:.75rem 0 0;font-size:.95rem}
+  .contact span{margin-right:1rem}
+  .icon{display:inline-flex;align-items:center;vertical-align:middle}
+  .icon svg{width:20px;height:20px;fill:currentColor}
+  .icon:hover{color:var(--accent)}
+  .btn{display:inline-block;background:var(--accent);color:#fff;padding:.5rem 1rem;border-radius:6px;font-weight:600;font-size:.9rem}
+  .btn:hover{text-decoration:none;opacity:.9}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.25rem;margin:0 0 1rem}
+  .card p{color:var(--muted);font-size:.93rem}
+  .tag{display:inline-block;font-size:.75rem;color:var(--muted);background:#eef2ff;border-radius:4px;padding:.1rem .5rem;margin:.35rem .35rem 0 0}
+  .cta{margin-top:1.5rem}
+  /* pipeline */
+  .pipe{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:1rem 0}
+  .stage{border:1px solid var(--border);border-radius:8px;padding:.45rem .7rem;font-size:.8rem;background:var(--card)}
+  .stage b{display:block;font-size:.78rem}
+  .stage small{color:var(--muted);font-size:.7rem}
+  .sec{border-color:#fecaca;background:#fef2f2}
+  .arrow{color:var(--muted);font-size:.8rem}
+  /* hover tooltips */
+  [data-tip]{position:relative;cursor:help}
+  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:0;z-index:9;background:var(--fg);color:var(--bg);padding:.4rem .6rem;border-radius:6px;font-size:.72rem;line-height:1.45;font-weight:400;text-align:left;white-space:normal;width:max-content;max-width:250px;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  .diagram g[title]{cursor:help}
+  .diagram g:hover rect,.diagram g:hover > rect{stroke:var(--accent)}
+  /* diagram */
+  .diagram{width:100%;height:auto;margin:.5rem 0}
+  .note{font-size:.85rem;color:var(--muted)}
+  /* metering demo */
+  .demo{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem}
+  .qbtn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:.75rem;font-weight:700;cursor:pointer;vertical-align:middle;margin-left:.4rem}
+  .qbtn:hover{color:var(--accent);border-color:var(--accent)}
+  .qbtn[aria-expanded="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .detail{margin-top:1.25rem}
+  .live{display:inline-flex;align-items:center;gap:.35rem;font-size:.85rem;border:1px solid var(--border);border-radius:99px;padding:.15rem .7rem;background:var(--card)}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .live.up{border-color:#bbf7d0;background:#f0fdf4;color:var(--green)}
+  .live.up .dot{background:var(--green)}
+  .live.down{color:var(--muted)}
+  .demo label{font-weight:600;font-size:.9rem}
+  .demo input[type=range]{width:100%;margin:.5rem 0}
+  .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem;margin-top:1rem}
+  .plan{border:1px solid var(--border);border-radius:8px;padding:.75rem;background:#fff}
+  .plan b{font-size:.9rem}
+  .plan .price{font-size:1.3rem;font-weight:700;margin-top:.2rem}
+  .plan .est{font-size:.8rem;color:var(--muted)}
+  .plan.hot{border-color:var(--accent)}
+  .unit-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.5rem;background:#fff}
+  .unit-table th,.unit-table td{border:1px solid var(--border);padding:.35rem .5rem;text-align:left}
+  .unit-table th{background:var(--card);font-size:.78rem}
+  .benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+  .benefits .card{margin-bottom:0}
+  .benefits ul{padding-left:1.1rem;font-size:.88rem;color:var(--muted)}
+  .benefits li{margin-bottom:.5rem}
+  .benefits li b{color:var(--fg)}
+  code{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:.05rem .3rem;font-size:.82em}
+  footer{margin-top:3rem;font-size:.8rem;color:var(--muted);border-top:1px solid var(--border);padding-top:1rem}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Christian Pompa</h1>
+  <p class="sub">Senior DevOps Engineer — AI Infrastructure, Cloud Platforms &amp; LLMOps</p>
+  <p class="contact">
+    <span><a class="icon" href="https://www.linkedin.com/in/christianpompa" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.24 8.25h4.52V23H.24V8.25zM8.34 8.25h4.33v2.01h.06c.6-1.14 2.08-2.34 4.28-2.34 4.57 0 5.42 3.01 5.42 6.92V23h-4.52v-7.1c0-1.69-.03-3.87-2.36-3.87-2.36 0-2.72 1.84-2.72 3.75V23H8.34V8.25z"/></svg></a></span>
+    <span><a class="icon" href="https://github.com/c-pompa" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 24 24"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-1.97c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11.1 11.1 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.35.77 1.05.77 2.12v3.14c0 .31.21.68.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg></a></span>
+    <span><a class="icon" href="https://github.com/search?q=author%3Ac-pompa+repo%3Anousresearch%2Fhermes-agent&type=pullrequests" title="Hermes Agent PRs (13)" aria-label="Hermes PRs"><svg viewBox="0 0 24 24"><path d="M6 2a3 3 0 0 1 1 5.83V16a3 3 0 1 1-2 0V7.83A3 3 0 0 1 6 2zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm0 12a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm12-1.83V9a3 3 0 0 0-3-3h-2.6l1.8-1.8L12.8 2.8 9 6.6l3.8 3.8 1.4-1.4L12.4 7H15a1 1 0 0 1 1 1v7.17a3 3 0 1 0 2 0z"/></svg></a></span>
+    <span class="live" id="live-status" style="text-decoration:none"><span class="dot"></span> Control plane — checking…</span>
+  </p>
+  <p class="cta">
+    <a class="btn" href="#metering">▶ Try the interactive metering demo ↓</a>
+    <a class="btn" style="background:var(--card);color:var(--accent);border:1px solid var(--border)" href="https://github.com/c-pompa/cpompa-ai-cloud-showcase" target="_blank" rel="noopener">View source &amp; docs on GitHub</a>
+    <a href="#projects" style="margin-left:.5rem">See the work ↓</a>
+  </p>
+  <p class="note" style="margin-top:.75rem">The production control plane at <strong>api.cpompa.com</strong> is
+  auth-gated and cross-origin status checks are blocked, so this page can't probe it from your browser — the
+  metering demo below is fully interactive, and the CI activity chart is rendered from real GitLab pipeline history.</p>
+</header>
+
+<section id="about">
+  <h2>About</h2>
+  <p>I build and operate AI-driven cloud platforms end to end — from Terraform/OpenTofu infrastructure and
+  trunk-based GitLab CI/CD with full security gates, to metered LLM inference endpoints, hosted AI agents,
+  and a self-hosted multi-node model-serving fleet. Currently leading rules-engine modernization
+  (Drools&nbsp;10) and AWS platform work at PennyMac.</p>
+</section>
+
+<section id="projects">
+  <h2>Selected Projects</h2>
+
+  <div class="card">
+    <h3>cpompa-ai-cloud — Multi-tenant AI agent hosting platform</h3>
+    <p>An OpenRouter-style control plane: users pick a plan, then call a fleet of models through an
+    OpenAI-compatible endpoint metered in units, or deploy their own cloud Hermes agent with tools, logs,
+    and streaming turns. Multi-tenant FastAPI + PostgreSQL/Redis on my own hardware, with Stripe
+    (test-mode) subscription billing and API-key management.</p>
+    <p><b>Highlights:</b> per-tenant usage metering · plan entitlements that fail closed · hardened Docker
+    runtime (non-root, no package manager at runtime, SHA-pinned deploys with rollback + smoke checks) ·
+    alembic schema migrations · full CI security pipeline (below).</p>
+    <span class="tag">FastAPI</span><span class="tag">PostgreSQL</span><span class="tag">Redis</span><span class="tag">Docker</span><span class="tag">Stripe</span><span class="tag">GitLab CI</span><span class="tag">OpenTofu</span>
+  </div>
+
+  <div class="card">
+    <h3>Nous Research / Hermes Agent — Open-source contributor</h3>
+    <p>13 open/merged pull requests to Hermes Agent (gateway, desktop app, agent tooling), reviewed by
+    upstream maintainers — plus an automated PR-status monitor that tracks review feedback and upstream
+    drift daily.</p>
+    <span class="tag">TypeScript</span><span class="tag">Python</span><span class="tag">Open Source</span>
+  </div>
+
+  <div class="card">
+    <h3>Self-hosted LLM serving fleet</h3>
+    <p>A distributed inference cluster (RTX 5080 · Mac mini M4 · MacBook Pro M5 Pro) behind a custom model
+    router with role-based fallback, health checks, mixture-of-agents pooling, and locally quantized
+    serving — the same routing/reliability problem space as the platforms above, run on my own hardware.</p>
+    <span class="tag">vLLM / llama.cpp</span><span class="tag">Quantization</span><span class="tag">Model routing</span>
+  </div>
+</section>
+
+<section id="ci">
+  <h2>CI/CD — lint, test, security gates</h2>
+  <p class="note">The real pipeline from cpompa-ai-cloud: every MR runs all of this before deploy; prod deploys are gated behind the scanners.</p>
+  <h3>Live CI activity — 20 days of the real pipeline</h3>
+  <p class="note">Pulled straight from gitlab.cpompa.com via API: every MR, dev push, and gated prod deploy.</p>
+  <div id="ci-root"></div>
+  <script src="ci-activity-widget.js?v=2"></script>
+  <p class="note" style="margin-top:-1rem">Hover any bar, stat, or pipeline stage below for the detail behind the number.</p>
+  <div class="pipe">
+    <div class="stage" data-tip="ruff with lint + bandit rules, pinned via uv.lock — style issues and obvious security smells caught in seconds, before anything expensive runs."><b>lint</b><small>ruff (pinned via uv.lock)</small></div><span class="arrow">→</span>
+    <div class="stage" data-tip="The full pytest suite runs against the exact locked dependency pins — tests pass on my machine AND in CI, or the MR fails."><b>test</b><small>pytest suite</small></div><span class="arrow">→</span>
+    <div class="stage sec" data-tip="gitleaks scans the diff and history so an API key or token never reaches the repo — fail-closed, no override in the pipeline."><b>secrets-scan</b><small>gitleaks</small></div><span class="arrow">→</span>
+    <div class="stage sec" data-tip="checkov audits the Dockerfile and CI config against infrastructure-as-code security policies (privileged containers, unpinned images, etc.)."><b>config-scan</b><small>checkov (Dockerfile + CI config)</small></div><span class="arrow">→</span>
+    <div class="stage" data-tip="Docker image built with the commit SHA baked in — every deploy is pinned to an immutable, reproducible artifact with automated rollback available."><b>build</b><small>docker image, commit-baked identity</small></div><span class="arrow">→</span>
+    <div class="stage sec" data-tip="pip-audit checks every locked requirement against known CVE databases — a vulnerable transitive dependency blocks the MR."><b>deps-audit</b><small>pip-audit on locked requirements</small></div><span class="arrow">→</span>
+    <div class="stage sec" data-tip="trivy scans the final built image for OS + package CVEs — any HIGH or CRITICAL finding exits 1 and blocks deployment."><b>image-scan</b><small>trivy (HIGH/CRITICAL, exit 1)</small></div><span class="arrow">→</span>
+    <div class="stage" data-tip="Deploys to the dev environment pinned to the exact commit SHA, with docker compose --wait verifying container health before the job passes."><b>deploy-dev</b><small>SHA-pinned, --wait healthcheck</small></div><span class="arrow">→</span>
+    <div class="stage" data-tip="Prod never moves automatically: a human triggers it, and the job is gated so it cannot run unless every scanner stage passed on that exact SHA."><b>deploy-prod</b><small>manual, scanner-gated</small></div>
+  </div>
+  <p class="note">Plus: compose/IaC validation, lockfile drift checks, rollback jobs, a prod cutover rehearsal,
+  and an eval-regression gate that fails CI when retrieval quality drops.</p>
+</section>
+
+<section id="architecture">
+  <h2>cpompa-ai-cloud — architecture</h2>
+  <svg class="diagram" viewBox="0 0 880 420" xmlns="http://www.w3.org/2000/svg" font-family="inherit" font-size="12" role="img" aria-label="cpompa-ai-cloud architecture diagram">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L8,3.5 L0,7 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arb" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L8,3.5 L0,7 z" fill="#2563eb"/>
+    </marker>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" flood-color="#0f172a" flood-opacity="0.08"/>
+    </filter>
+    <linearGradient id="cpHead" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+
+  <!-- production badge -->
+  <g filter="url(#sh)"><title>Live status: this control plane runs in production at api.cpompa.com — auth-gated, cross-origin status checks blocked.</title>
+    <rect x="596" y="12" width="264" height="26" rx="13" fill="#f0fdf4" stroke="#bbf7d0"/>
+    <circle cx="614" cy="25" r="4.5" fill="#059669"/>
+    <text x="628" y="29" font-size="11" fill="#047857" font-weight="600">PRODUCTION · api.cpompa.com · auth-gated</text>
+  </g>
+
+  <!-- ══ Clients lane ══ -->
+  <text x="20" y="86" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">CLIENTS</text>
+  <g filter="url(#sh)"><title>Who talks to the platform: developers via an OpenAI-compatible API (existing OpenAI SDKs work unmodified), agent owners deploying cloud Hermes agents, and Stripe driving subscriptions via webhooks.</title>
+    <rect x="20" y="96" width="170" height="58" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="105" y="120" text-anchor="middle" font-weight="600">Developers</text>
+    <text x="105" y="138" text-anchor="middle" fill="#64748b" font-size="10.5">OpenAI-compatible API</text>
+    <rect x="20" y="174" width="170" height="58" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="105" y="198" text-anchor="middle" font-weight="600">Agent owners</text>
+    <text x="105" y="216" text-anchor="middle" fill="#64748b" font-size="10.5">hosted Hermes agents</text>
+    <rect x="20" y="252" width="170" height="58" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="105" y="276" text-anchor="middle" font-weight="600">Stripe</text>
+    <text x="105" y="294" text-anchor="middle" fill="#64748b" font-size="10.5">subscriptions (test mode)</text>
+  </g>
+
+  <line x1="190" y1="125" x2="244" y2="139" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="190" y1="203" x2="244" y2="195" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="190" y1="281" x2="244" y2="251" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="205" y="272" font-size="10" fill="#94a3b8">webhooks</text>
+  <text x="196" y="118" font-size="10" fill="#94a3b8">HTTPS · API keys</text>
+
+  <!-- ══ Control plane ══ -->
+  <g filter="url(#sh)"><title>The multi-tenant FastAPI control plane — every request is authenticated by tenant API key, metered in units, and rate-limited. Plan entitlements come from Stripe price IDs and fail closed: an unknown price grants nothing.</title>
+    <rect x="250" y="70" width="290" height="280" rx="10" fill="#ffffff" stroke="#bfdbfe"/>
+    <rect x="250" y="70" width="290" height="34" rx="10" fill="url(#cpHead)"/>
+    <rect x="250" y="92" width="290" height="12" fill="#2563eb"/>
+    <text x="395" y="92" text-anchor="middle" fill="#ffffff" font-weight="700" font-size="12.5">CONTROL PLANE — FastAPI</text>
+  </g>
+  <g font-size="11.5">
+    <rect x="266" y="116" width="258" height="46" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="276" y="134" font-family="ui-monospace,Menlo,monospace" font-size="10.5">/v1/chat/completions</text>
+    <text x="276" y="150" fill="#64748b" font-size="10">metered in units · API keys · rate limits</text>
+    <rect x="266" y="172" width="258" height="46" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="276" y="190" font-family="ui-monospace,Menlo,monospace" font-size="10.5">/agents  ·  /messages  ·  /logs</text>
+    <text x="276" y="206" fill="#64748b" font-size="10">hosted agents · tools · SSE streaming turns</text>
+    <rect x="266" y="228" width="258" height="46" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="276" y="246" font-family="ui-monospace,Menlo,monospace" font-size="10.5">/plans  ·  /checkout  ·  /usage</text>
+    <text x="276" y="262" fill="#64748b" font-size="10">entitlements fail closed from Stripe price IDs</text>
+    <rect x="266" y="284" width="258" height="46" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="276" y="302" font-family="ui-monospace,Menlo,monospace" font-size="10.5">/nodes  ·  /pair-nodes</text>
+    <text x="276" y="318" fill="#64748b" font-size="10">fleet view · bring-your-own-hardware (mTLS)</text>
+  </g>
+
+  <line x1="540" y1="139" x2="594" y2="139" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="540" y1="195" x2="594" y2="195" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="540" y1="307" x2="606" y2="246" stroke="#2563eb" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#arb)"/>
+  <text x="548" y="300" font-size="10" fill="#2563eb">proxy / escalate</text>
+
+  <!-- ══ Datastores lane ══ -->
+  <rect x="590" y="74" width="282" height="290" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="600" y="86" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">RUNTIME — DATA &amp; COMPUTE</text>
+  <g filter="url(#sh)"><title>PostgreSQL holds tenancy, metering and billing data (schema changes go through alembic migrations). Redis handles rate-limit leases and transient-error retries — see the deadlock-retry work in the repo.</title>
+    <rect x="600" y="96" width="124" height="86" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="662" y="130" text-anchor="middle" font-weight="600">PostgreSQL</text>
+    <text x="662" y="148" text-anchor="middle" fill="#64748b" font-size="10">tenancy · metering</text>
+    <text x="662" y="163" text-anchor="middle" fill="#64748b" font-size="10">alembic migrations</text>
+    <rect x="736" y="96" width="124" height="86" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="798" y="130" text-anchor="middle" font-weight="600">Redis</text>
+    <text x="798" y="148" text-anchor="middle" fill="#64748b" font-size="10">leases · rate limits</text>
+    <text x="798" y="163" text-anchor="middle" fill="#64748b" font-size="10">transient retries</text>
+  </g>
+
+  <!-- ══ Model fleet lane ══ -->
+  <text x="600" y="206" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">MODEL FLEET</text>
+  <g filter="url(#sh)"><title>Self-hosted serving fleet behind a custom router with health checks and role-based fallback. Unit prices in the metering demo are derived from these machines' measured serving cost — the numbers are real, not marketing.</title>
+    <rect x="600" y="216" width="260" height="134" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+  </g>
+  <rect x="612" y="228" width="236" height="30" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="730" y="247" text-anchor="middle" font-weight="600" font-size="11">Model router — fallback · health checks</text>
+  <rect x="612" y="266" width="74" height="30" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="649" y="285" text-anchor="middle" font-size="10.5">RTX 5080</text>
+  <rect x="693" y="266" width="74" height="30" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="730" y="285" text-anchor="middle" font-size="10.5">Mac mini M4</text>
+  <rect x="774" y="266" width="74" height="30" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="811" y="285" text-anchor="middle" font-size="10.5">MBP M5 Pro</text>
+  <text x="730" y="322" text-anchor="middle" fill="#64748b" font-size="10">quantized serving · mixture-of-agents pooling</text>
+  <text x="730" y="338" text-anchor="middle" fill="#64748b" font-size="10">unit rates derived from measured serving cost</text>
+
+  <!-- ══ Runtime footer ══ -->
+  <line x1="20" y1="372" x2="860" y2="372" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="20" y="394" font-size="10.5" fill="#64748b">Runtime: hardened Docker stack on owned hardware — non-root images, SHA-pinned deploys, automated rollback + smoke checks</text>
+  <g transform="translate(700,382)">
+    <line x1="0" y1="8" x2="22" y2="8" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#ar)"/>
+    <text x="28" y="11" font-size="10" fill="#64748b">sync request</text>
+    <line x1="100" y1="8" x2="122" y2="8" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+    <text x="128" y="11" font-size="10" fill="#64748b">async / proxy</text>
+  </g>
+</svg>
+</section>
+
+<section id="metering">
+  <h2 style="display:flex;align-items:center;justify-content:space-between">Metering demo — how units are priced
+    <span><button id="meter-q" class="qbtn" aria-expanded="false" title="Show meter details">?</button></span></h2>
+  <p class="note">One unit is the <b>measured serving cost of one chat turn</b> on the small model. Every user
+  gets <b>$1/mo Starter with 500 free units</b>; usage beyond that is bought as top-ups at the same published
+  rate — <b>$1 = 2,000 units</b>. No request caps, no 5-hour windows. Drag the slider:</p>
+
+  <div class="demo">
+    <label for="tok">Tokens per month: <span id="tokval">2,000,000</span></label>
+    <input type="range" id="tok" min="100000" max="40000000" step="100000" value="2000000">
+    <div class="plans" id="plans"></div>
+    <p class="note" id="over" style="margin-top:.75rem"></p>
+  </div>
+
+  <div id="meter-detail" class="detail" hidden>
+    <h3>What typical work costs (real measured rates)</h3>
+    <table class="unit-table">
+      <tr><th>workload</th><th>shape</th><th>our cost</th><th>units charged</th><th>user pays</th></tr>
+      <tr><td>Small chat turn</td><td>600 in / 250 out</td><td>$0.000126</td><td>1</td><td>$0.0005</td></tr>
+      <tr><td>Small coding task</td><td>8k in / 800 out</td><td>$0.000571</td><td>4</td><td>$0.002</td></tr>
+      <tr><td>27B chat turn</td><td>600 in / 250 out</td><td>$0.000829</td><td>6</td><td>$0.003</td></tr>
+      <tr><td>27B coding task</td><td>8k in / 800 out</td><td>$0.003346</td><td>24</td><td>$0.012</td></tr>
+      <tr><td>27B agent turn</td><td>30k in / 2k out</td><td>$0.009505</td><td>67</td><td>$0.0335</td></tr>
+    </table>
+    <p class="note">Margin is nearly flat across every shape (71.5%–74.8%) <i>because</i> the meter follows
+    cost — routing to a bigger model is a priced decision, never a silent loss.</p>
+
+    <h3>Why meter in units instead of requests?</h3>
+    <p class="note">A chat user makes one call per message. An agent task makes <b>dozens</b> — a single
+    "summarise these invoices" run is a planning call, five tool calls, two retries and a synthesis
+    (30–100 LLM requests). Metering the <i>call</i> charges customers for our implementation detail; that's
+    why per-request allowances look generous in a demo and evaporate in a week of real agent use.
+    <b>The unit is the honest atom</b>: it maps to what a request actually costs us, weighted by model size
+    and context length.</p>
+
+    <div class="benefits">
+    <div class="card">
+      <h3>Benefit to the company</h3>
+      <ul>
+        <li><b>Predictable, near-flat margin (~70%)</b> at every request shape — revenue scales 1:1 with
+        measured serving cost, so no surprise loss from heavy tenants.</li>
+        <li><b>Heavy users pay proportionally.</b> Usage beyond the grant flows into top-ups at the same
+        rate — expansion revenue without changing plans.</li>
+        <li><b>Priced routing.</b> Serving a 27B agent turn costs 67× a small chat turn; the unit weights
+        that automatically, so model mix is a margin decision, not a leak.</li>
+        <li><b>Test-enforced billing integrity</b> — the rate table is generated from measurements and a
+        CI test pins the meter to it.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Benefit to users</h3>
+      <ul>
+        <li><b>Transparent and predictable:</b> you pay for tokens you actually use at a published rate,
+        not a black-box credit system or 5-hour refresh windows.</li>
+        <li><b>Agents are affordable:</b> no per-request caps means an agent that makes 50 calls for one
+        task pays for the tokens, not 50 "premium requests."</li>
+        <li><b>Try-before-you-scale:</b> 500 units free every month covers roughly 500 chat turns — real
+        evaluation before spending a cent.</li>
+        <li><b>Per-workload fairness:</b> light chat users aren't subsidizing heavy coding-agent users;
+        each workload is charged by its own cost.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Why it's a good growth strategy</h3>
+      <ul>
+        <li><b>Land below the market floor.</b> Market entry has converged at $20/mo (Claude Pro, ChatGPT
+        Plus, Cursor). Entering at <b>$1/mo</b> is a 20× lower commitment — trivially easy to try, and
+        paid users validate demand from day one.</li>
+        <li><b>Usage-led expansion, not upsell friction.</b> Growth happens automatically as users consume
+        more top-ups — the pricing curve grows with the customer instead of forcing plan migrations.</li>
+        <li><b>Agents are the growth engine.</b> Agent workloads consume 30–100 requests per task, so
+        adoption of agentic tooling directly multiplies unit consumption — and the unit meter captures
+        all of it fairly.</li>
+        <li><b>Margin-proof to model deflation.</b> Because rates are derived from <i>our measured
+        hardware cost</i>, we can re-derive prices as models and hardware change — the same property
+        commodity API resellers (who rent compute) can't match.</li>
+      </ul>
+    </div>
+  </div>
+  </div>
+</section>
+
+<footer>
+  Built as a static single-file site — no frameworks, no build step.
+  Projects referenced: cpompa-ai-cloud (private repo), Hermes Agent (open source).
+</footer>
+
+<script>
+// Real model (ADR-0005): Starter $1/mo, 500 units free grant; top-ups $1 = 2,000 units ($0.0005/unit).
+// 1 unit = 2k input + 256 output tokens on the small model (measured serving cost).
+const GRANT_UNITS = 500;
+const PRICE_PER_UNIT = 0.0005; // $1 = 2,000 units
+const fmt = n => n.toLocaleString('en-US');
+const money = n => n < 0.01 && n > 0 ? '$' + n.toFixed(4) : '$' + n.toFixed(2);
+const tok = document.getElementById('tok');
+const render = () => {
+  const tokens = +tok.value;
+  // tokens -> units: a unit is 2k in + 256 out ≈ 2,256 tokens
+  const units = Math.ceil(tokens/2256);
+  const billable = Math.max(0, units - GRANT_UNITS);
+  const topupCost = billable * PRICE_PER_UNIT;
+  // market comparison: cheapest comparable API entry is ~$0.60/$2.20 per 1M in/out on a 2:1 mix ≈ blended
+  const apiCost = tokens/1e6 * (0.6*2/3 + 2.2/3);
+  document.getElementById('tokval').textContent = fmt(tokens);
+  document.getElementById('plans').innerHTML = `
+    <div class="plan"><b>Free grant</b><div class="est">500 units / month, every month</div>
+      <div class="price">${units<=GRANT_UNITS?'$0.00':'$0.00'}</div>
+      <div class="est">${units<=GRANT_UNITS ? `${fmt(GRANT_UNITS-units)} units left` : 'grant fully used'}</div></div>
+    <div class="plan hot"><b>Top-ups owed</b><div class="est">$1 = 2,000 units, one-time</div>
+      <div class="price">${money(topupCost)}</div>
+      <div class="est">${fmt(billable)} billable units beyond grant</div></div>
+    <div class="plan"><b>vs. hosted APIs</b><div class="est">z.ai GLM-4.6 blended rate</div>
+      <div class="price">${money(apiCost)}</div>
+      <div class="est">${apiCost>0? (apiCost/topupCost).toFixed(1)+'× more expensive':'—'}</div></div>`;
+  document.getElementById('over').textContent =
+    `${fmt(tokens)} tokens ≈ ${fmt(units)} units (${fmt(GRANT_UNITS)} free) → ${money(topupCost)} in top-ups. $1/mo Starter + pay-per-unit beats a $20/mo window plan unless usage is extreme.`;
+};
+tok.addEventListener('input', render); render();
+
+// ? toggle for meter details
+const qbtn = document.getElementById('meter-q');
+const detail = document.getElementById('meter-detail');
+qbtn.addEventListener('click', () => {
+  const open = detail.hidden;
+  detail.hidden = !open;
+  qbtn.setAttribute('aria-expanded', String(open));
+  qbtn.title = open ? 'Hide meter details' : 'Show meter details';
+});
+
+// live control-plane status — CORS-mode check: only reports "live" when /health
+// explicitly answers with CORS headers AND 200. Anything else = private/blocked.
+// (no-cors would resolve even on a 403 and fake a green dot — that bug is why this is CORS-mode.)
+(async () => {
+  const el = document.getElementById('live-status');
+  const set = (cls, title, text) => {
+    el.className = 'live ' + cls;
+    el.title = title;
+    el.innerHTML = '<span class="dot"></span> ' + text;
+  };
+  try {
+    const res = await fetch('https://api.cpompa.com/health', {mode: 'cors', cache: 'no-store'});
+    if (res.ok) {
+      set('up', 'GET /health returned 200 with CORS headers — control plane is up', 'Control plane live — health-checked');
+    } else {
+      set('down', 'Control plane answered but is not CORS-enabled for public status checks', 'Control plane — cross-origin checks blocked');
+    }
+  } catch {
+    set('down', 'Status couldn\'t be verified from this browser (CORS or network)', 'Control plane — status unverifiable from browser');
+  }
+})();
+
+</script>
+</body>
+</html>
