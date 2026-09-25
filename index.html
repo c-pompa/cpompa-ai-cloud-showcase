@@ -135,6 +135,10 @@
 <section id="ci">
   <h2>CI/CD — lint, test, security gates</h2>
   <p class="note">The real pipeline from cpompa-ai-cloud: every MR runs all of this before deploy; prod deploys are gated behind the scanners.</p>
+  <h3>Live CI activity — 20 days of the real pipeline</h3>
+  <p class="note">Pulled straight from gitlab.cpompa.com via API: every MR, dev push, and gated prod deploy.</p>
+  <div id="ci-root"></div>
+  <script src="ci-activity-widget.js"></script>
   <div class="pipe">
     <div class="stage"><b>lint</b><small>ruff (pinned via uv.lock)</small></div><span class="arrow">→</span>
     <div class="stage"><b>test</b><small>pytest suite</small></div><span class="arrow">→</span>
