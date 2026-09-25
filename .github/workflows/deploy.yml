@@ -1,0 +1,84 @@
+# Showcase CI — the portfolio demo runs its own security gate.
+# Proves the same discipline as the control-plane pipeline at portfolio scale:
+#   secrets scan -> PII/HTML guards -> cache-bust stamp -> publish (gh-pages branch).
+# The stamp commit carries [skip ci] so it never re-triggers this workflow.
+name: showcase-ci
+
+on:
+  push:
+    branches: [gh-pages]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  security:
+    name: secrets-scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so gitleaks can scan commits, not just the tree
+      - name: Scan history for secrets
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            ghcr.io/gitleaks/gitleaks:latest detect --source /repo --verbose --redact
+
+  guards:
+    name: PII + HTML guards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PII regression guard (resume docx, email, phone)
+        run: |
+          # --exclude-dir=.github: the guard must not match its own pattern literal
+          if grep -rEni 'chrispompa ?email|chris(\.|i?)pompa@|562[ .-]?413[ .-]?2221|Christian_Pompa_Resume' \
+              . --exclude-dir=.git --exclude-dir=.github; then
+            echo "::error::PII pattern found in tree"; exit 1
+          fi
+      - name: HTML sanity (parse + balanced tags)
+        run: |
+          python3 - <<'EOF'
+          from html.parser import HTMLParser
+          VOID = {'area','base','br','col','embed','hr','img','input','link','meta','source','track','wbr'}
+          class P(HTMLParser):
+              def __init__(self):
+                  super().__init__(); self.stack = []; self.errs = []
+              def handle_starttag(self, tag, attrs):
+                  if tag not in VOID: self.stack.append(tag)
+              def handle_endtag(self, tag):
+                  if not self.stack or self.stack[-1] != tag:
+                      self.errs.append(f'unbalanced </{tag}> (stack top: {self.stack[-1] if self.stack else "empty"})')
+                  else:
+                      self.stack.pop()
+          p = P()
+          p.feed(open('index.html').read())
+          if p.errs or p.stack:
+              raise SystemExit(f'index.html broken: {p.errs} unclosed: {p.stack}')
+          print('index.html parses clean')
+          EOF
+
+  deploy:
+    name: stamp cache-bust + publish
+    needs: [security, guards]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/gh-pages'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stamp build hash into cache-bust URLs
+        run: |
+          V="${GITHUB_SHA::7}"
+          # replace any ?v=<old> with the commit that actually built the site
+          sed -i -E "s/(\?v=)[A-Za-z0-9_-]+/\1${V}/g" index.html
+          if git diff --quiet; then
+            echo "no stamp change needed"
+          else
+            git config user.name "showcase-ci"
+            git config user.email "actions@users.noreply.github.com"
+            git commit -am "ci: stamp cache-bust ?v=${V} [skip ci]"
+            git push
+          fi
+      - name: Site published
+        run: echo "gh-pages branch is the Pages source — push above publishes at https://c-pompa.github.io/cpompa-ai-cloud-showcase/?v=${GITHUB_SHA::7}"
