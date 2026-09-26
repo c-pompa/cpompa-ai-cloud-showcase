@@ -271,42 +271,35 @@
 
 <section id="iac-lab">
   <h2>Emergency redeploy readiness — if a box died tonight, could the repo rebuild it?</h2>
-  <p class="note">The test each project is scored against: <b>hardware turned off or wiped, a fresh machine
-  in its place — clone the repo, follow the docs, does the stack come back in one shot?</b> Scores are an
-  honest self-audit against the actual repos, not a wish list. Click a project for what's covered and
-  what's still missing on the road to 100%:</p>
+  <p class="note">One test: <b>wipe the machine, clone the repo, does the stack come back in one shot?</b>
+  Solid = ready now · hatched = the gap to 100% · click a bar for specifics.</p>
 
   <div class="demo">
-    <div id="lan-map" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem"></div>
+    <div style="display:flex;align-items:baseline;gap:.8rem;margin-bottom:.9rem">
+      <div id="fleet-pct" style="font-size:2.6rem;font-weight:800;letter-spacing:-.02em">—</div>
+      <div class="note">fleet average — the number that has to read <b>100%</b></div>
+    </div>
+    <div id="lan-map" style="display:grid;gap:.55rem"></div>
     <p class="note" id="lan-detail" style="margin-top:.9rem"></p>
   </div>
 
-  <div class="benefits">
-    <div class="card">
-      <h3>What one-shot deploy means here</h3>
-      <ul>
-        <li><b>Everything that defines the stack is in git:</b> compose/Terraform files, schema migrations,
-        deploy scripts, runbooks — and the env template with fail-closed <code>${VAR:?}</code> gates so the
-        stack refuses to boot half-configured instead of silently missing a variable.</li>
-        <li><b>Secrets and data have a restore path, not a repo path.</b> They're git-ignored by design;
-        readiness means a documented, <i>drilled</i> restore: nightly backups with env-file snapshots,
-        off-box copies, and an automated weekly restore drill that proves the dump loads.</li>
-        <li><b>The deploy is mechanized and health-gated:</b> SHA-pinned images (<code>IMAGE_TAG=$CI_COMMIT_SHA</code>),
-        <code>--wait</code> health checks, an automated rollback job, and a local script that builds and
-        boots the same image CI does.</li>
-      </ul>
+  <div class="demo" style="margin-top:1rem">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem">
+      <div>
+        <div class="est" style="margin-bottom:.5rem">THE TARGET — 100% looks like this</div>
+        <pre style="margin:0;padding:.9rem;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:auto;font-size:.85rem;line-height:1.7">$ ./bootstrap.sh   <span class="note"># the only step</span>
+<span style="color:var(--accent)">✓</span> cpompa-ai-cloud ........ 100%
+<span style="color:var(--accent)">✓</span> homelab-docker ......... 100%
+<span style="color:var(--accent)">✓</span> showcase site .......... 100%
+<span style="color:var(--accent)">✓</span> staging stack .......... 100%
+fleet readiness: <b style="color:var(--accent)">100%</b> — restore drill green, nothing outside git</pre>
+      </div>
+      <div>
+        <div class="est" style="margin-bottom:.5rem">TODAY — measured from the bars above</div>
+        <pre id="now-board" style="margin:0;padding:.9rem;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:auto;font-size:.85rem;line-height:1.7"></pre>
+      </div>
     </div>
-    <div class="card">
-      <h3>Live from api.cpompa.com</h3>
-      <ul>
-        <li>Production control plane: <b><span id="iac-health" style="font-weight:700">checking…</span></b>
-        <span class="note">(probed from your browser, CORS-mode, cache-busted)</span></li>
-        <li>Sandbox demo on dev: read-only mode with seeded sample data — writes return
-        <b>405</b> with an <code>X-Sandbox</code> header, inference stays live. See MR&nbsp;!225.</li>
-        <li>Deploy path: <code>dev</code> → MR → security gates (secrets-scan, config-scan, deps-audit,
-        image-scan) → <code>main</code> → gated manual deploy.</li>
-      </ul>
-    </div>
+    <p class="note" style="margin-top:.9rem">Production control plane: <b><span id="iac-health">checking…</span></b></p>
   </div>
 </section>
 
@@ -330,15 +323,24 @@ const LAN_NODES = [
 ];
 const lanMap = document.getElementById('lan-map');
 const lanDetail = document.getElementById('lan-detail');
+const barColor = p => p >= 100 ? 'var(--accent)' : p >= 50 ? 'var(--foreground)' : 'var(--muted-foreground)';
 lanMap.innerHTML = LAN_NODES.map((n, i) => `
-  <button class="plan" data-lan="${i}" style="cursor:pointer;text-align:left;font:inherit">
-    <div style="font-size:1.4rem">${n.icon}</div>
-    <b>${n.name}</b>
-    <div class="est">${n.sub}</div>
-    <div style="height:6px;background:var(--border);border-radius:3px;margin-top:.5rem;overflow:hidden">
-      <div style="height:100%;width:${n.pct}%;background:${n.pct >= 90 ? 'var(--accent)' : n.pct >= 50 ? 'var(--foreground)' : 'var(--muted-foreground)'};border-radius:3px"></div>
+  <button class="plan" data-lan="${i}" style="cursor:pointer;text-align:left;font:inherit;padding:.65rem .85rem">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.6rem">
+      <span style="font-size:1.05rem">${n.icon} <b>${n.name}</b> <span class="est" style="margin-left:.3rem">${n.sub.split('·')[0].trim()}</span></span>
+      <span style="font-weight:800;white-space:nowrap;color:${n.pct >= 100 ? 'var(--accent)' : 'inherit'}">${n.pct}%</span>
+    </div>
+    <div style="height:16px;border:1px solid var(--border);border-radius:5px;margin-top:.45rem;overflow:hidden;background:repeating-linear-gradient(45deg,transparent,transparent 4px,var(--border) 4px,var(--border) 7px)">
+      <div style="height:100%;width:${n.pct}%;background:${barColor(n.pct)}"></div>
     </div>
   </button>`).join('');
+const avg = Math.round(LAN_NODES.reduce((s, n) => s + n.pct, 0) / LAN_NODES.length);
+document.getElementById('fleet-pct').textContent = avg + '%';
+document.getElementById('fleet-pct').style.color = avg >= 100 ? 'var(--accent)' : 'inherit';
+document.getElementById('now-board').innerHTML =
+  LAN_NODES.map(n =>
+    `${n.pct >= 100 ? '✓' : '✗'} ${n.name} ${'.'.repeat(Math.max(2, 24 - n.name.length))} ${n.pct}%`
+  ).join('\n') + `\nfleet readiness: ${avg}% ${avg >= 100 ? '— done' : `— ${100 - avg} pts to go`}`;
 const showNode = i => {
   lanDetail.innerHTML = LAN_NODES[i].detail;
   lanMap.querySelectorAll('[data-lan]').forEach(b =>
