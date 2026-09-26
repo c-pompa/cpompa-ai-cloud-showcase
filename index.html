@@ -130,6 +130,18 @@
     serving — the same routing/reliability problem space as the platforms above, run on my own hardware.</p>
     <span class="tag">vLLM / llama.cpp</span><span class="tag">Quantization</span><span class="tag">Model routing</span>
   </div>
+
+  <div class="card">
+    <h3>Hermes Agent — desktop plugin suite (6 plugins)</h3>
+    <p>Six production plugins for the Hermes desktop app + backend, all thin-plugin/fat-core (stdlib-only
+    cores, backend APIs mounted at <code>/api/plugins/&lt;id&gt;/</code>): <b>fork-upgrader</b> — tracks
+    upstream drift on a vendored fork and drives a gated prepare&nbsp;→&nbsp;test&nbsp;→&nbsp;publish&nbsp;→&nbsp;deploy
+    upgrade pipeline from the desktop; <b>smart-router-studio</b> — GPU-fleet model catalog with size/guardrail
+    budgeting and SSH-probed multi-host downloads; <b>model-router</b> — presence-aware role-alias router with
+    registered read-only agent tools; <b>metrics-dashboard</b> — live LLM request metrics, health findings, and
+    usage map; plus <b>model-providers</b> and <b>hermes-achievements</b> (session-scanning achievement engine).</p>
+    <span class="tag">Python</span><span class="tag">Plugin APIs</span><span class="tag">Agent tools</span><span class="tag">Desktop UI</span><span class="tag">Stdlib-only cores</span>
+  </div>
 </section>
 
 <section id="ci">
