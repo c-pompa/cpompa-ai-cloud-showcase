@@ -83,13 +83,13 @@
     <span class="live" id="live-status" style="text-decoration:none"><span class="dot"></span> Control plane — checking…</span>
   </p>
   <p class="cta">
-    <a class="btn" href="#iac-lab">▶ Explore the interactive IaC lab layout ↓</a>
+    <a class="btn" href="#iac-lab">▶ Emergency redeploy readiness — every repo scored ↓</a>
     <a class="btn" style="background:var(--card);color:var(--accent);border:1px solid var(--border)" href="https://github.com/c-pompa/cpompa-ai-cloud-showcase" target="_blank" rel="noopener">View source &amp; docs on GitHub</a>
     <a href="#projects" style="margin-left:.5rem">See the work ↓</a>
   </p>
   <p class="note" style="margin-top:.75rem">The production control plane at <strong>api.cpompa.com</strong> is
-  live and health-checked from this page (dot above). Below: an interactive layout of the VLAN&nbsp;15 lab
-  every service actually runs on, and the CI activity chart rendered from real GitLab pipeline history.</p>
+  live and health-checked from this page (dot above). Below: a scored audit of whether each repo could
+  rebuild its stack from zero in one shot, and the CI activity chart rendered from real GitLab pipeline history.</p>
 </header>
 
 <section id="about">
@@ -270,10 +270,11 @@
 </section>
 
 <section id="iac-lab">
-  <h2>IaC lab layout — VLAN&nbsp;15, the network everything runs on</h2>
-  <p class="note">Every project on this page runs on hardware I own and segment myself. The lab was rebuilt
-  in September&nbsp;2026 onto a dedicated <b>VLAN&nbsp;15 (10.88.15.0/24, domain ai.internal)</b> — the old
-  flat 10.88.1.x network was decommissioned the same day. Click a node:</p>
+  <h2>Emergency redeploy readiness — if a box died tonight, could the repo rebuild it?</h2>
+  <p class="note">The test each project is scored against: <b>hardware turned off or wiped, a fresh machine
+  in its place — clone the repo, follow the docs, does the stack come back in one shot?</b> Scores are an
+  honest self-audit against the actual repos, not a wish list. Click a project for what's covered and
+  what's still missing on the road to 100%:</p>
 
   <div class="demo">
     <div id="lan-map" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem"></div>
@@ -282,16 +283,17 @@
 
   <div class="benefits">
     <div class="card">
-      <h3>Why a dedicated VLAN</h3>
+      <h3>What one-shot deploy means here</h3>
       <ul>
-        <li><b>Blast-radius control.</b> Prod (:8030) and dev (:8020) control planes, Postgres and Redis
-        all live on the mini inside VLAN&nbsp;15 — the rest of the home network can't reach the databases
-        even by accident.</li>
-        <li><b>Tailscale overlay on top.</b> GitLab (<code>gitlab.cpompa.com</code>), SSH and CI runners
-        ride a WireGuard mesh (100.73.11.35) — CI deploys over the relay, never over an exposed port.</li>
-        <li><b>IaC-managed lifecycle.</b> Services are declared in compose files, deployed by GitLab CI
-        with SHA-pinned images (<code>IMAGE_TAG=$CI_COMMIT_SHA</code>), health-gated
-        (<code>--wait</code>), with an automated prod rollback job.</li>
+        <li><b>Everything that defines the stack is in git:</b> compose/Terraform files, schema migrations,
+        deploy scripts, runbooks — and the env template with fail-closed <code>${VAR:?}</code> gates so the
+        stack refuses to boot half-configured instead of silently missing a variable.</li>
+        <li><b>Secrets and data have a restore path, not a repo path.</b> They're git-ignored by design;
+        readiness means a documented, <i>drilled</i> restore: nightly backups with env-file snapshots,
+        off-box copies, and an automated weekly restore drill that proves the dump loads.</li>
+        <li><b>The deploy is mechanized and health-gated:</b> SHA-pinned images (<code>IMAGE_TAG=$CI_COMMIT_SHA</code>),
+        <code>--wait</code> health checks, an automated rollback job, and a local script that builds and
+        boots the same image CI does.</li>
       </ul>
     </div>
     <div class="card">
@@ -315,20 +317,16 @@
 
 <script>
 
-// interactive VLAN 15 lab layout — click a node for details
+// emergency redeploy readiness — click a project for its audit detail
 const LAN_NODES = [
-  { id: 'gw', name: 'UniFi Gateway', sub: 'VLAN 15 · 10.88.15.1', icon: '🛡️',
-    detail: '<b>UniFi gateway, 10.88.15.1.</b> Routes and firewall for VLAN 15 (10.88.15.0/24, domain ai.internal) — a dedicated segment rebuilt in September 2026 after the old flat 10.88.1.x network was decommissioned. Inter-VLAN rules keep the lab isolated from the rest of the home network.' },
-  { id: 'mini', name: 'Mini (M-series)', sub: '10.88.15.208 · Docker host', icon: '🖥️',
-    detail: '<b>Mac mini, 10.88.15.208 — the workhorse.</b> Docker host for the production control plane (api.cpompa.com, :8030) and the dev control plane (:8020, currently running the read-only sandbox demo), each with its own Postgres + Redis. Also runs the Hermes agent gateway and Honcho (agent memory). Deploys arrive via GitLab CI over the Tailscale relay with SHA-pinned images and health-gated <code>--wait</code>.' },
-  { id: 'desktop', name: 'Desktop2', sub: '10.88.15.168 · Docker/WSL2', icon: '🖧',
-    detail: '<b>Desktop2 (Windows, Docker Desktop on WSL2), 10.88.15.168.</b> Second Docker host for homelab services and experimentation (homelab stack on D:\\homelab). Reached over SSH as <code>homelab-pc</code>. Serves as the fallback node and the place where new services are staged before they earn a spot on the mini.' },
-  { id: 'fleet', name: 'Model fleet', sub: 'self-hosted LLM serving', icon: '🧠',
-    detail: '<b>Self-hosted model-serving fleet.</b> Quantized LLMs on owned hardware behind a custom router with health checks and role-based fallback — the serving layer the cpompa-ai-cloud control plane meters and routes to. The escalation router can burst to a hosted provider when local capacity runs out.' },
-  { id: 'tail', name: 'Tailscale overlay', sub: '100.73.11.35 · WireGuard mesh', icon: '🔗',
-    detail: '<b>Tailscale WireGuard mesh, 100.73.11.35.</b> Carries everything that should never touch a public port: GitLab (<code>gitlab.cpompa.com</code>), SSH sessions, CI deploy relays. Public surface is deliberately tiny — api.cpompa.com (health + auth-gated API) and nothing else.' },
-  { id: 'prod', name: 'api.cpompa.com', sub: 'prod control plane · :8030', icon: '☁️',
-    detail: '<b>Production control plane, api.cpompa.com (:8030).</b> FastAPI + Postgres/Redis multi-tenant platform: OpenAI-compatible metered inference endpoint, hosted agents with per-seat billing, fleet/node pairing, Stripe test-mode webhooks. Deployed only by GitLab CI from <code>main</code> after the full security gate; rollback is a one-click manual job.' },
+  { id: 'cloud', name: 'cpompa-ai-cloud', sub: 'prod control plane · 90%', pct: 90, icon: '☁️',
+    detail: '<b>90% — closest to one-shot.</b> <b>Covered:</b> both dev and prod compose files tracked; a named-only env template (<code>.env.prod.example</code>) that CI validates against the compose file, with <code>${VAR:?}</code> gates that refuse a half-configured boot; <code>bootstrap_env.py</code> regenerates env files from scratch; a cold-rebuild runbook written for exactly this scenario (total loss of the deploy box); nightly Postgres backups that snapshot the env files alongside the dump, synced off-box; an automated weekly restore drill that loads the newest dump and compares row counts against live; 26 alembic migrations so schema rebuilds from zero; <code>verify_runtime.sh</code> builds and boots the same image CI deploys. <b>Still missing:</b> DNS/overlay config lives outside the repo, and the runbook ends in a short human checklist (Stripe + OAuth console values) — by design, those never touch git.' },
+  { id: 'lab', name: 'homelab-docker', sub: 'Terraform fleet · 80%', pct: 80, icon: '🖥️',
+    detail: '<b>80%.</b> <b>Covered:</b> the whole fleet (Traefik, GitLab, Home Assistant, MQTT, Prometheus, Grafana) is declared in Terraform with the Docker provider and deploys with a single <code>./start.sh</code>; Terraform HTTP remote state backend (state deliberately git-ignored, restored from the backend, not the repo); <code>*.tfvars.example</code> templates for the secret files; its own GitLab CI. <b>Still missing:</b> the real <code>tfvars</code>/<code>backend.hcl</code> are untracked with no verified off-box copy yet, and persistent volume data (Grafana dashboards, HA config) has no restore drill — that is the gap between 80 and 100.' },
+  { id: 'site', name: 'This showcase site', sub: 'GitHub Pages · 100%', pct: 100, icon: '📄',
+    detail: '<b>100% — the proof of concept for the goal.</b> The repo <i>is</i> the deployment: static HTML/CSS/JS in git, GitHub Actions publishes on push, and CI (secrets scan, PII guard, HTML parse gate) must pass first. Delete the deployment, re-enable Pages from the repo, done — nothing exists outside git.' },
+  { id: 'desk', name: 'Desktop2 staging stack', sub: 'known gap · ~20%', pct: 20, icon: '⚠️',
+    detail: '<b>~20% — the honest gap on the road to 100%.</b> The staging Docker host\'s service definitions live in a plain directory that is <b>not a git repository</b>; only a one-off migration bundle exists. If that disk died tonight, nothing would redeploy it. <b>Fix planned:</b> promote the staging definitions into the tracked <code>homelab-docker</code> Terraform/compose layout (or git-init and push them), then this bar joins the others. Declared here rather than hidden — that is the point of scoring it.' },
 ];
 const lanMap = document.getElementById('lan-map');
 const lanDetail = document.getElementById('lan-detail');
@@ -337,6 +335,9 @@ lanMap.innerHTML = LAN_NODES.map((n, i) => `
     <div style="font-size:1.4rem">${n.icon}</div>
     <b>${n.name}</b>
     <div class="est">${n.sub}</div>
+    <div style="height:6px;background:var(--border);border-radius:3px;margin-top:.5rem;overflow:hidden">
+      <div style="height:100%;width:${n.pct}%;background:${n.pct >= 90 ? 'var(--accent)' : n.pct >= 50 ? 'var(--foreground)' : 'var(--muted-foreground)'};border-radius:3px"></div>
+    </div>
   </button>`).join('');
 const showNode = i => {
   lanDetail.innerHTML = LAN_NODES[i].detail;
@@ -347,7 +348,7 @@ lanMap.addEventListener('click', e => {
   const b = e.target.closest('[data-lan]');
   if (b) showNode(+b.dataset.lan);
 });
-showNode(1); // default: the mini
+showNode(0); // default: the control plane
 
 // live api.cpompa.com health probe inside the IaC section
 (async () => {
