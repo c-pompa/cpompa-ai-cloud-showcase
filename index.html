@@ -29,13 +29,13 @@
   .icon:hover{color:var(--accent)}
   .btn{display:inline-block;background:var(--accent);color:#fff;padding:.5rem 1rem;border-radius:6px;font-weight:600;font-size:.9rem}
   .btn:hover{text-decoration:none;opacity:.9}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.25rem;margin:0 0 1rem;box-shadow:0 1px 2px rgba(15,23,42,.05)}
+  .card{background:var(--card);border:1px solid rgba(27,38,44,.12);border-radius:6px;padding:1.25rem 1.4rem;margin:0 0 1rem;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)}
   .card p{color:var(--muted);font-size:.93rem}
   .tag{display:inline-block;font-size:.75rem;color:var(--muted);background:#eef2ff;border-radius:4px;padding:.1rem .5rem;margin:.35rem .35rem 0 0}
   .cta{margin-top:1.5rem}
   /* pipeline */
   .pipe{display:flex;flex-wrap:wrap;gap:.5rem .4rem;align-items:stretch;margin:1rem 0}
-  .stage{border:1px solid var(--border);border-radius:8px;padding:.45rem .7rem;font-size:.8rem;background:#fff;flex:0 0 auto;box-shadow:0 1px 2px rgba(15,23,42,.05)}
+  .stage{border:1px solid rgba(27,38,44,.12);border-radius:6px;padding:.45rem .7rem;font-size:.8rem;background:#fff;flex:0 0 auto;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)}
   .stage b{display:block;font-size:.78rem;white-space:nowrap}
   .stage small{color:var(--muted);font-size:.7rem;display:block;max-width:190px}
   .sec{border-color:#fca5a5;background:#fff5f5}
@@ -49,7 +49,7 @@
   .diagram{width:100%;height:auto;margin:.5rem 0}
   .note{font-size:.85rem;color:var(--muted)}
 
-  .demo{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem}
+  .demo{background:var(--card);border:1px solid rgba(27,38,44,.12);border-radius:6px;padding:1.25rem 1.4rem;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)}
   .qbtn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:.75rem;font-weight:700;cursor:pointer;vertical-align:middle;margin-left:.4rem}
   .qbtn:hover{color:var(--accent);border-color:var(--accent)}
   .qbtn[aria-expanded="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
@@ -62,7 +62,7 @@
   .demo label{font-weight:600;font-size:.9rem}
   .demo input[type=range]{width:100%;margin:.5rem 0}
   .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem;margin-top:1rem}
-  .plan{border:1px solid var(--border);border-radius:8px;padding:.75rem;background:#fff}
+  .plan{border:1px solid rgba(27,38,44,.12);border-radius:6px;padding:.75rem;background:#fff;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)}
   .est{font-size:.8rem;color:var(--muted)}
   .plan b{font-size:.9rem}
   .plan .price{font-size:1.3rem;font-weight:700;margin-top:.2rem}
@@ -307,7 +307,7 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem">
       <div>
         <div class="est" style="margin-bottom:.5rem">THE TARGET — 100% looks like this</div>
-        <pre style="margin:0;padding:.9rem;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:auto;font-size:.85rem;line-height:1.7">$ ./bootstrap.sh   <span class="note"># the only step</span>
+        <pre style="margin:0;padding:.9rem;background:var(--card);border:1px solid rgba(27,38,44,.12);border-radius:6px;overflow:auto;font-size:.85rem;line-height:1.7;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)">$ ./bootstrap.sh   <span class="note"># the only step</span>
 <span style="color:var(--accent)">✓</span> cpompa-ai-cloud ........ 100%
 <span style="color:var(--accent)">✓</span> homelab-docker ......... 100%
 <span style="color:var(--accent)">✓</span> showcase site .......... 100%
@@ -316,7 +316,7 @@ fleet readiness: <b style="color:var(--accent)">100%</b> — restore drill green
       </div>
       <div>
         <div class="est" style="margin-bottom:.5rem">TODAY — measured from the bars above</div>
-        <pre id="now-board" style="margin:0;padding:.9rem;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:auto;font-size:.85rem;line-height:1.7"></pre>
+        <pre id="now-board" style="margin:0;padding:.9rem;background:var(--card);border:1px solid rgba(27,38,44,.12);border-radius:6px;overflow:auto;font-size:.85rem;line-height:1.7;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)"></pre>
       </div>
     </div>
     <p class="note" style="margin-top:.9rem">Production control plane: <b><span id="iac-health">checking…</span></b></p>
