@@ -315,6 +315,26 @@ fleet readiness: <b style="color:var(--accent)">100%</b> — restore drill green
   </div>
 </section>
 
+<section id="diagrams">
+  <h2>Architecture diagrams — interactive gallery</h2>
+  <p class="note">Spec-authored and machine-validated with archify: layout, labels and edge routing are checked for overlap and readability before delivery. Click a card to open the full interactive viewer (zoom, pan, hover).</p>
+  <div class="card">
+    <h3><a href="diagrams/s2docs.html" target="_blank" rel="noopener">s2docs — Source 2 Docs + MCP ↗</a></h3>
+    <p>GameTracking mirrors and Valve's own <code>point_script.d.ts</code>/FGD files feed <code>s2docs sync</code>, which indexes one SQLite DB in ~5&nbsp;s per game; <code>s2docs serve</code> then exposes it three ways — a vanilla-JS ops SPA, a JSON API with OpenAPI, and MCP over HTTP + stdio for coding agents.</p>
+    <span class="tag">architecture</span><span class="tag">FastAPI</span><span class="tag">MCP</span><span class="tag">SQLite</span>
+  </div>
+  <div class="card">
+    <h3><a href="diagrams/hermes-plugin-fleet.html" target="_blank" rel="noopener">Hermes Desktop Plugin Fleet ↗</a></h3>
+    <p>Hermes core loads three dashboard-only plugins — operations (vitals, traces, topology, alerts), gitlab-mr (MR + CI timelines correlated to Kanban tasks), and smart-router-studio (dry-run, gated apply with rollback) — each mounting its API at <code>/api/plugins/&lt;id&gt;/</code> over its own data sources.</p>
+    <span class="tag">architecture</span><span class="tag">plugin system</span><span class="tag">observability</span>
+  </div>
+  <div class="card">
+    <h3><a href="diagrams/iso-spectator.html" target="_blank" rel="noopener">CS2 Isometric Spectator Director ↗</a></h3>
+    <p>A zero-dependency Node director closes the control loop: CS2 posts player positions over Game State Integration at ~7–9/s, and the director answers <code>spec_goto</code> at 60&nbsp;Hz over the network console — with rig, occlusion autocut and glow modules keeping an isometric camera readable in live, GOTV and demo playback.</p>
+    <span class="tag">architecture</span><span class="tag">CS2</span><span class="tag">GSI</span><span class="tag">real-time</span>
+  </div>
+</section>
+
 <footer>
   Built as a static single-file site — no frameworks, no build step.
   Projects referenced: cpompa-ai-cloud (private repo), Hermes Agent (open source).
