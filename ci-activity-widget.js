@@ -5,7 +5,7 @@
     '#ci-root .stats{display:flex;gap:1.25rem;flex-wrap:wrap;margin:.5rem 0 .25rem}',
     '#ci-root .stat b{font-size:1.25rem;display:block}',
     '#ci-root .stat span{color:var(--muted-foreground);font-size:.8rem}',
-    '#ci-root .bars{display:flex;align-items:flex-end;gap:2px;height:110px;margin:.75rem 0 .25rem}',
+    '#ci-root .bars{display:flex;gap:2px;height:110px;margin:.75rem 0 .25rem}',
     '#ci-root .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;min-width:3px}',
     '#ci-root .bar:hover .s{filter:brightness(1.25)}',
     '#ci-root .bar .s{background:var(--accent);border-radius:1px 1px 0 0}',
@@ -29,12 +29,13 @@
       return '<div class="bar" data-tip="'+tip+'">'
       + '<div class="s" style="height:'+(s/max*100).toFixed(1)+'%"></div>'
       + '<div class="f" style="height:'+(f/max*100).toFixed(1)+'%"></div></div>'; }
+    var span = pretty(stats.from)+' – '+pretty(stats.to)+', '+stats.to.slice(0,4);
     var root = document.getElementById('ci-root');
     root.innerHTML =
       '<div class="stats">'
-      + '<div class="stat" data-tip="Every pipeline run across merge requests, dev pushes, and gated prod deploys — Sep 4–23, 2026, straight from the GitLab API."><b>'+stats.total+'</b><span>CI runs &middot; 20 days</span></div>'
-      + '<div class="stat" data-tip="475 of 548 runs passed. Failures are not hidden — they fail the MR before it can merge or deploy. That is the gate working."><b>'+stats.success_rate+'%</b><span>pass rate</span></div>'
-      + '<div class="stat" data-tip="Half of all pipelines complete in under 1.6 min — fast feedback on every push keeps the loop tight."><b>'+stats.median_min+' min</b><span>median pipeline</span></div>'
+      + '<div class="stat" data-tip="Every pipeline run across merge requests, dev pushes, and gated prod deploys since the first one, '+span+', straight from the GitLab API."><b>'+stats.total+'</b><span>CI runs to date</span></div>'
+      + '<div class="stat" data-tip="'+stats.passed+' of '+stats.total+' runs passed. Failures are not hidden: they fail the MR before it can merge or deploy. That is the gate working."><b>'+stats.success_rate+'%</b><span>pass rate</span></div>'
+      + '<div class="stat" data-tip="Half of all pipelines complete in under '+stats.median_min+' min. Fast feedback on every push keeps the loop tight."><b>'+stats.median_min+' min</b><span>median pipeline</span></div>'
       + '<div class="stat" data-tip="Production never moves automatically: deploys are manual and only runnable after every security scanner passed on that exact commit SHA."><b>'+stats.main_runs+'</b><span>prod deploys (gated)</span></div>'
       + '<div class="stat" data-tip="Every merge request runs the full gate — ruff, pytest, docker build, and four security scanners — before it can merge."><b>'+stats.mr_runs+'</b><span>MR pipelines</span></div>'
       + '</div>'
