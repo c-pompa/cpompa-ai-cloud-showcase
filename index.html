@@ -85,15 +85,13 @@
     <span><a class="icon" href="https://www.linkedin.com/in/christianpompa" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.24 8.25h4.52V23H.24V8.25zM8.34 8.25h4.33v2.01h.06c.6-1.14 2.08-2.34 4.28-2.34 4.57 0 5.42 3.01 5.42 6.92V23h-4.52v-7.1c0-1.69-.03-3.87-2.36-3.87-2.36 0-2.72 1.84-2.72 3.75V23H8.34V8.25z"/></svg></a></span>
     <span><a class="icon" href="https://github.com/c-pompa" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 24 24"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-1.97c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11.1 11.1 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.35.77 1.05.77 2.12v3.14c0 .31.21.68.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg></a></span>
     <span><a class="icon" href="https://github.com/search?q=author%3Ac-pompa+repo%3Anousresearch%2Fhermes-agent&type=pullrequests" title="Hermes Agent PRs (13)" aria-label="Hermes PRs"><svg viewBox="0 0 24 24"><path d="M6 2a3 3 0 0 1 1 5.83V16a3 3 0 1 1-2 0V7.83A3 3 0 0 1 6 2zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm0 12a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm12-1.83V9a3 3 0 0 0-3-3h-2.6l1.8-1.8L12.8 2.8 9 6.6l3.8 3.8 1.4-1.4L12.4 7H15a1 1 0 0 1 1 1v7.17a3 3 0 1 0 2 0z"/></svg></a></span>
-    <span class="live" id="live-status" style="text-decoration:none"><span class="dot"></span> Control plane — checking…</span>
   </p>
   <p class="cta">
     <a class="btn" href="#iac-lab">▶ Emergency redeploy readiness — every repo scored ↓</a>
     <a class="btn" style="background:var(--card);color:var(--accent);border:1px solid var(--border)" href="https://github.com/c-pompa/cpompa-ai-cloud-showcase" target="_blank" rel="noopener">View source &amp; docs on GitHub</a>
     <a href="#projects" style="margin-left:.5rem">See the work ↓</a>
   </p>
-  <p class="note" style="margin-top:.75rem">The production control plane at <strong>api.cpompa.com</strong> is
-  live and health-checked from this page (dot above). Below: a scored audit of whether each repo could
+  <p class="note" style="margin-top:.75rem">Below: a scored audit of whether each repo could
   rebuild its stack from zero in one shot, and the CI activity chart rendered from real GitLab pipeline history.</p>
 </header>
 
@@ -321,7 +319,6 @@ fleet readiness: <b style="color:var(--accent)">100%</b> — restore drill green
         <pre id="now-board" style="margin:0;padding:.9rem;background:var(--card);border:1px solid rgba(27,38,44,.12);border-radius:6px;overflow:auto;font-size:.85rem;line-height:1.7;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)"></pre>
       </div>
     </div>
-    <p class="note" style="margin-top:.9rem">Production control plane: <b><span id="iac-health">checking…</span></b></p>
   </div>
 </section>
 
@@ -393,36 +390,6 @@ lanMap.addEventListener('click', e => {
   if (b) showNode(+b.dataset.lan);
 });
 showNode(0); // default: the control plane
-
-// live api.cpompa.com health probe inside the IaC section
-(async () => {
-  const el = document.getElementById('iac-health');
-  try {
-    const res = await fetch('https://api.cpompa.com/health?v=' + Date.now(), {mode: 'cors', cache: 'no-store'});
-    el.textContent = res.ok ? 'LIVE — ' + (await res.text()).trim() : 'answered ' + res.status;
-    el.style.color = res.ok ? 'var(--accent)' : '';
-  } catch { el.textContent = 'unreachable from this browser (CORS or network)'; }
-})();
-
-(async () => {
-  const el = document.getElementById('live-status');
-  const set = (cls, title, text) => {
-    el.className = 'live ' + cls;
-    el.title = title;
-    el.innerHTML = '<span class="dot"></span> ' + text;
-  };
-  try {
-    const res = await fetch('https://api.cpompa.com/health', {mode: 'cors', cache: 'no-store'});
-    if (res.ok) {
-      set('up', 'GET /health returned 200 with CORS headers — control plane is up', 'Control plane live — health-checked');
-    } else {
-      set('down', 'Control plane answered but is not CORS-enabled for public status checks', 'Control plane — cross-origin checks blocked');
-    }
-  } catch {
-    // browser couldn't reach the API — show a neutral badge, no status claim
-    set('down', '', 'Control plane');
-  }
-})();
 
 </script>
 </body>
