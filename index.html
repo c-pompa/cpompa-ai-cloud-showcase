@@ -10,27 +10,36 @@
 <style>
   /* ════════════ design tokens — change a value here, not in the markup ════════════ */
   :root{
-    --bg:#ffffff; --fg:#18181b; --muted:#6b7280; --border:#e5e7eb;
-    --hairline:rgba(27,38,44,.12); --surface:#ffffff; --card:#f9fafb;
-    --accent:#2563eb; --green:#059669; --red:#dc2626;
-    --radius:6px; --radius-sm:4px; --radius-pill:99px;
-    --elev:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45);
+    /* ══ five colours, and only five. Anything else on this page is one of
+       these at a lower alpha — no sixth hue sneaks in. ══ */
+    --ink:#0f172a;     /* every word, and the dark strokes in the diagrams */
+    --paper:#ffffff;   /* the page, and the inside of every box */
+    --mist:#f8fafc;    /* quiet surfaces: panels, code, chips, tags */
+    --line:#e2e8f0;    /* every hairline, in CSS and in the diagrams */
+    --accent:#2563eb;  /* the one hue: primary action and the "done" signal */
+    /* tints — the five above, thinned. Not new colours. */
+    --muted:rgba(15,23,42,.62);
+    --accent-soft:rgba(37,99,235,.10);
+    --accent-half:rgba(37,99,235,.45);
+    --elev:0 1px 2px rgba(15,23,42,.07),0 12px 28px -14px rgba(15,23,42,.42);
+    /* shape — square, not pill. Only panels keep a softened corner. */
+    --radius:4px; --radius-sm:2px;
     --fs-caption:.74rem; --fs-small:.85rem; --fs-body:.95rem;
     --gap-xs:.4rem; --gap-sm:.7rem; --gap:.9rem; --gap-lg:1.4rem;
   }
   *{box-sizing:border-box;margin:0;padding:0}
 
   /* ════════════ base type — the reset kills paragraph margins, so restore rhythm ════════════ */
-  body{font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;max-width:880px;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+  body{font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;max-width:880px;margin:0 auto;padding:2.5rem 1.25rem 5rem}
   h1,h2,h3,h4{font-family:"Barlow Semi Condensed","Public Sans",sans-serif}
   code,.tag,.terminal{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
   h1{font-size:2.3rem;letter-spacing:-.01em}
-  h2{font-size:1.4rem;margin:2.5rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+  h2{font-size:1.4rem;margin:2.5rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid var(--line)}
   h3{font-size:1.12rem;margin:1.4rem 0 .3rem}
   p+p{margin-top:.6rem}
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
-  code{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.05rem .3rem;font-size:.82em}
+  code{background:var(--mist);border:1px solid var(--line);border-radius:var(--radius-sm);padding:.05rem .3rem;font-size:.82em}
   .sub{color:var(--muted);margin-top:.25rem}
   .lede{font-size:var(--fs-body)}
   .note{font-size:var(--fs-small);color:var(--muted)}
@@ -45,33 +54,33 @@
 
   /* ════════════ calls to action — one row, equal weight, even gaps ════════════ */
   .cta{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.5rem}
-  .btn{display:inline-block;background:var(--accent);color:#fff;padding:.5rem 1rem;border-radius:var(--radius);font-weight:600;font-size:.9rem}
+  .btn{display:inline-block;background:var(--accent);color:var(--paper);padding:.5rem 1rem;border-radius:var(--radius-sm);font-weight:600;font-size:.9rem}
   .btn:hover{text-decoration:none;opacity:.9}
-  .btn-ghost{background:var(--card);color:var(--accent);border:1px solid var(--border)}
+  .btn-ghost{background:var(--mist);color:var(--accent);border:1px solid var(--line)}
 
   /* ════════════ surfaces — every box on the page is drawn in ONE place ════════════ */
-  .card,.panel,.stage,.rowbtn,.terminal{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius);box-shadow:var(--elev)}
+  .card,.panel,.stage,.rowbtn,.terminal{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--elev)}
   .card{padding:1.25rem var(--gap-lg);margin:0 0 1rem}
   .card p{color:var(--muted);font-size:.93rem}
-  .card p b,.card li b{color:var(--fg)}
+  .card p b,.card li b{color:var(--ink)}
   .card ul{margin:.4rem 0 0;padding-left:1.1rem;font-size:.93rem;color:var(--muted)}
   .card li{margin-bottom:.3rem}
-  .panel{background:var(--card);padding:1.25rem var(--gap-lg)}
+  .panel{background:var(--mist);padding:1.25rem var(--gap-lg)}
   .panel+.panel{margin-top:var(--gap-lg)}
   .panel-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:var(--gap-sm);margin-bottom:var(--gap)}
-  .tag{display:inline-block;font-size:.75rem;color:var(--muted);background:#eef2ff;border-radius:var(--radius-sm);padding:.1rem .5rem;margin:.35rem .35rem 0 0}
+  .tag{display:inline-block;font-size:.75rem;color:var(--muted);background:var(--mist);border-radius:var(--radius-sm);padding:.1rem .5rem;margin:.35rem .35rem 0 0}
 
   /* ════════════ CI pipeline strip ════════════ */
   .pipe{display:flex;flex-wrap:wrap;gap:.5rem .4rem;align-items:stretch;margin:1rem 0}
   .stage{padding:.45rem .7rem;font-size:.8rem;flex:0 0 auto}
   .stage b{display:block;font-size:.78rem;white-space:nowrap}
   .stage small{color:var(--muted);font-size:.7rem;display:block;max-width:190px}
-  .sec{border-color:#fca5a5;background:#fff5f5}
+  .sec{border-color:var(--accent-half);background:var(--accent-soft)}
   .arrow{color:var(--muted);font-size:.8rem}
 
   /* ════════════ diagrams + tooltips ════════════ */
   [data-tip]{position:relative;cursor:help}
-  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:0;z-index:9;background:var(--fg);color:var(--bg);padding:.4rem .6rem;border-radius:var(--radius);font-size:.72rem;line-height:1.45;font-weight:400;text-align:left;white-space:normal;width:max-content;max-width:250px;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:0;z-index:9;background:var(--ink);color:var(--paper);padding:.4rem .6rem;border-radius:var(--radius);font-size:.72rem;line-height:1.45;font-weight:400;text-align:left;white-space:normal;width:max-content;max-width:250px;pointer-events:none;box-shadow:0 4px 12px rgba(15,23,42,.18)}
   .diagram g[title]{cursor:help}
   .diagram g:hover rect,.diagram g:hover > rect{stroke:var(--accent)}
   .diagram{width:100%;height:auto;margin:.5rem 0}
@@ -80,43 +89,85 @@
   .kpi{display:flex;align-items:baseline;gap:var(--gap-sm);flex-wrap:wrap}
   .kpi b{font-size:2.4rem;font-weight:800;letter-spacing:-.02em;line-height:1}
   .kpi small{font-size:var(--fs-small);color:var(--muted)}
-  .chip{display:inline-block;font-size:var(--fs-caption);font-weight:600;border-radius:var(--radius-pill);padding:.12rem .55rem;background:var(--card);border:1px solid var(--border);color:var(--muted)}
-  .chip.ok{color:var(--green);border-color:#bbf7d0;background:#f0fdf4}
-  .chip.gap{color:var(--red);border-color:#fecaca;background:#fef2f2}
+  .chip{display:inline-block;font-size:var(--fs-caption);font-weight:600;border-radius:var(--radius-sm);padding:.12rem .55rem;background:var(--mist);border:1px solid var(--line);color:var(--muted)}
+  .chip.ok{color:var(--accent);border-color:var(--accent-half);background:var(--accent-soft)}
+  .chip.gap{color:var(--ink);border-color:var(--line);background:var(--paper)}
   .verdict{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;margin:var(--gap) 0}
   .verdict > span:last-child{flex:1 1 380px;font-size:var(--fs-small);color:var(--muted)}
-  .verdict b{color:var(--fg)}
+  .verdict b{color:var(--ink)}
   .rows{display:grid;gap:var(--gap-sm)}
-  .rowbtn{display:block;width:100%;text-align:left;font:inherit;padding:.6rem .8rem;cursor:pointer;transition:border-color .12s}
+  .rowbtn{display:block;width:100%;text-align:left;font:inherit;padding:.6rem .8rem;cursor:pointer;transition:border-color .12s;color:inherit}
   .rowbtn:hover{border-color:var(--accent)}
   .rowbtn[aria-pressed="true"]{border-color:var(--accent);box-shadow:var(--elev),inset 0 0 0 1px var(--accent)}
   .row-top{display:flex;align-items:baseline;gap:var(--gap-sm);flex-wrap:wrap}
   .row-name{font-weight:600}
   .row-sub{font-size:var(--fs-caption);color:var(--muted)}
   .row-pct{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums}
-  .meter{display:block;height:12px;margin-top:var(--gap-xs);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:repeating-linear-gradient(45deg,transparent,transparent 4px,var(--border) 4px,var(--border) 7px)}
-  .meter i{display:block;height:100%;background:var(--muted)}
+  .meter{display:block;height:12px;margin-top:var(--gap-xs);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;background:repeating-linear-gradient(45deg,transparent,transparent 4px,var(--line) 4px,var(--line) 7px)}
+  .meter i{display:block;height:100%;background:var(--accent-half)}
   .meter i.full{background:var(--accent)}
 
   /* the audit itself: a verdict + two labelled lists, never one paragraph */
-  .detail{margin-top:var(--gap);border-top:1px solid var(--border);padding-top:var(--gap)}
+  .detail{margin-top:var(--gap);border-top:1px solid var(--line);padding-top:var(--gap)}
   .detail-verdict{font-size:var(--fs-small);color:var(--muted)}
-  .detail-verdict b{color:var(--fg)}
+  .detail-verdict b{color:var(--ink)}
   .detail-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--gap) var(--gap-lg);margin-top:var(--gap-sm)}
   .detail h4{font-family:inherit;font-size:var(--fs-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
   .detail ul{margin:.3rem 0 0;padding-left:1.1rem}
   .detail li{font-size:var(--fs-small);color:var(--muted);margin-bottom:.3rem}
-  .detail li b{color:var(--fg)}
+  .detail li b{color:var(--ink)}
   .detail p{font-size:var(--fs-small);color:var(--muted);margin-top:.3rem}
 
   /* ════════════ terminal boards (target vs today) ════════════ */
   .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--gap-lg)}
-  .terminal{margin:.4rem 0 0;padding:.85rem .9rem;background:var(--surface);font-size:var(--fs-small);line-height:1.7;overflow:auto}
+  .terminal{margin:.4rem 0 0;padding:.85rem .9rem;background:var(--paper);font-size:var(--fs-small);line-height:1.7;overflow:auto}
   .terminal .dim{color:var(--muted)}
   .terminal .ok{color:var(--accent)}
-  .terminal .gap{color:var(--red)}
+  .terminal .gap{color:var(--ink);font-weight:700}
 
-  footer{margin-top:3rem;font-size:.8rem;color:var(--muted);border-top:1px solid var(--border);padding-top:1rem}
+  footer{margin-top:3rem;font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:1rem}
+
+  /* ════════════ the hand-drawn diagrams in the markup still carry literal
+     hexes. These rules map every one of them onto the five tokens above, so
+     the page paints the same palette everywhere. ════════════ */
+  [fill="#0f172a"]{fill:var(--ink)}
+  [fill="#18181b"]{fill:var(--ink)}
+  [stroke="#0f172a"]{stroke:var(--ink)}
+  [fill="#64748b"]{fill:var(--muted)}
+  [fill="#94a3b8"]{fill:var(--muted)}
+  [stroke="#94a3b8"]{stroke:var(--muted)}
+  [stroke="#64748b"]{stroke:var(--muted)}
+  [fill="#e2e8f0"]{fill:var(--line)}
+  [stroke="#e2e8f0"]{stroke:var(--line)}
+  [stroke="#cbd5e1"]{stroke:var(--line)}
+  [stroke="#e5e7eb"]{stroke:var(--line)}
+  [fill="#f8fafc"]{fill:var(--mist)}
+  [fill="#f9fafb"]{fill:var(--mist)}
+  [fill="#ffffff"]{fill:var(--paper)}
+  [fill="#fff"]{fill:var(--paper)}
+  [stroke="#ffffff"]{stroke:var(--paper)}
+  [fill="#2563eb"]{fill:var(--accent)}
+  [stroke="#2563eb"]{stroke:var(--accent)}
+  [fill="#3b82f6"]{fill:var(--accent)}
+  [stroke="#3b82f6"]{stroke:var(--accent)}
+  [stop-color="#3b82f6"]{stop-color:var(--accent)}
+  [stop-color="#2563eb"]{stop-color:var(--accent)}
+  [fill="#bfdbfe"]{fill:var(--accent-soft)}
+  [stroke="#bfdbfe"]{stroke:var(--accent-half)}
+  [fill="#bbf7d0"]{fill:var(--accent-soft)}
+  [stroke="#bbf7d0"]{stroke:var(--accent-half)}
+  [stroke="#f0fdf4"]{stroke:var(--accent-soft)}
+  [fill="#f0fdf4"]{fill:var(--accent-soft)}
+  [fill="#059669"]{fill:var(--accent)}
+  [fill="#047857"]{fill:var(--accent)}
+  [stroke="#059669"]{stroke:var(--accent)}
+  [fill="#dc2626"]{fill:var(--ink)}
+  [fill="#fca5a5"]{fill:var(--line)}
+  [stroke="#fca5a5"]{stroke:var(--ink)}
+  [fill="#fef2f2"]{fill:var(--mist)}
+  [fill="#fff5f5"]{fill:var(--mist)}
+  [fill="#6b7280"]{fill:var(--muted)}
+  [flood-color="#0f172a"]{flood-color:var(--ink)}
 </style>
 </head>
 <body>
@@ -243,7 +294,7 @@
 
   <!-- production badge -->
   <g filter="url(#sh)"><title>Live status: this control plane runs in production at api.cpompa.com — auth-gated, cross-origin status checks blocked.</title>
-    <rect x="596" y="12" width="264" height="26" rx="13" fill="#f0fdf4" stroke="#bbf7d0"/>
+    <rect x="596" y="12" width="264" height="26" rx="4" fill="#f0fdf4" stroke="#bbf7d0"/>
     <circle cx="614" cy="25" r="4.5" fill="#059669"/>
     <text x="628" y="29" font-size="11" fill="#047857" font-weight="600">PRODUCTION · api.cpompa.com · auth-gated</text>
   </g>
@@ -251,13 +302,13 @@
   <!-- ══ Clients lane ══ -->
   <text x="20" y="86" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">CLIENTS</text>
   <g filter="url(#sh)"><title>Who talks to the platform: developers via an OpenAI-compatible API (existing OpenAI SDKs work unmodified), agent owners deploying cloud Hermes agents, and Stripe driving subscriptions via webhooks.</title>
-    <rect x="20" y="96" width="170" height="58" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="20" y="96" width="170" height="58" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
     <text x="105" y="120" text-anchor="middle" font-weight="600">Developers</text>
     <text x="105" y="138" text-anchor="middle" fill="#64748b" font-size="10.5">OpenAI-compatible API</text>
-    <rect x="20" y="174" width="170" height="58" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="20" y="174" width="170" height="58" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
     <text x="105" y="198" text-anchor="middle" font-weight="600">Agent owners</text>
     <text x="105" y="216" text-anchor="middle" fill="#64748b" font-size="10.5">hosted Hermes agents</text>
-    <rect x="20" y="252" width="170" height="58" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="20" y="252" width="170" height="58" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
     <text x="105" y="276" text-anchor="middle" font-weight="600">Stripe</text>
     <text x="105" y="294" text-anchor="middle" fill="#64748b" font-size="10.5">subscriptions (test mode)</text>
   </g>
@@ -270,22 +321,22 @@
 
   <!-- ══ Control plane ══ -->
   <g filter="url(#sh)"><title>The multi-tenant FastAPI control plane — every request is authenticated by tenant API key, metered in units, and rate-limited. Plan entitlements come from Stripe price IDs and fail closed: an unknown price grants nothing.</title>
-    <rect x="250" y="70" width="290" height="280" rx="10" fill="#ffffff" stroke="#bfdbfe"/>
-    <rect x="250" y="70" width="290" height="34" rx="10" fill="url(#cpHead)"/>
+    <rect x="250" y="70" width="290" height="280" rx="4" fill="#ffffff" stroke="#bfdbfe"/>
+    <rect x="250" y="70" width="290" height="34" rx="4" fill="url(#cpHead)"/>
     <rect x="250" y="92" width="290" height="12" fill="#2563eb"/>
     <text x="395" y="92" text-anchor="middle" fill="#ffffff" font-weight="700" font-size="12.5">CONTROL PLANE — FastAPI</text>
   </g>
   <g font-size="11.5">
-    <rect x="266" y="116" width="258" height="46" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+    <rect x="266" y="116" width="258" height="46" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
     <text x="276" y="134" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="10.5">/v1/chat/completions</text>
     <text x="276" y="150" fill="#64748b" font-size="10">metered in units · API keys · rate limits</text>
-    <rect x="266" y="172" width="258" height="46" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+    <rect x="266" y="172" width="258" height="46" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
     <text x="276" y="190" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="10.5">/agents  ·  /messages  ·  /logs</text>
     <text x="276" y="206" fill="#64748b" font-size="10">hosted agents · tools · SSE streaming turns</text>
-    <rect x="266" y="228" width="258" height="46" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+    <rect x="266" y="228" width="258" height="46" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
     <text x="276" y="246" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="10.5">/plans  ·  /checkout  ·  /usage</text>
     <text x="276" y="262" fill="#64748b" font-size="10">entitlements fail closed from Stripe price IDs</text>
-    <rect x="266" y="284" width="258" height="46" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+    <rect x="266" y="284" width="258" height="46" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
     <text x="276" y="302" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="10.5">/nodes  ·  /pair-nodes</text>
     <text x="276" y="318" fill="#64748b" font-size="10">fleet view · bring-your-own-hardware (mTLS)</text>
   </g>
@@ -296,14 +347,14 @@
   <text x="548" y="300" font-size="10" fill="#2563eb">proxy / escalate</text>
 
   <!-- ══ Datastores lane ══ -->
-  <rect x="590" y="74" width="282" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+  <rect x="590" y="74" width="282" height="290" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
   <text x="600" y="86" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">RUNTIME — DATA &amp; COMPUTE</text>
   <g filter="url(#sh)"><title>PostgreSQL holds tenancy, metering and billing data (schema changes go through alembic migrations). Redis handles rate-limit leases and transient-error retries — see the deadlock-retry work in the repo.</title>
-    <rect x="600" y="96" width="124" height="86" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="600" y="96" width="124" height="86" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
     <text x="662" y="130" text-anchor="middle" font-weight="600">PostgreSQL</text>
     <text x="662" y="148" text-anchor="middle" fill="#64748b" font-size="10">tenancy · metering</text>
     <text x="662" y="163" text-anchor="middle" fill="#64748b" font-size="10">alembic migrations</text>
-    <rect x="736" y="96" width="124" height="86" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="736" y="96" width="124" height="86" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
     <text x="798" y="130" text-anchor="middle" font-weight="600">Redis</text>
     <text x="798" y="148" text-anchor="middle" fill="#64748b" font-size="10">leases · rate limits</text>
     <text x="798" y="163" text-anchor="middle" fill="#64748b" font-size="10">transient retries</text>
@@ -312,15 +363,15 @@
   <!-- ══ Model fleet lane ══ -->
   <text x="600" y="206" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">MODEL FLEET</text>
   <g filter="url(#sh)"><title>Self-hosted serving fleet behind a custom router with health checks and role-based fallback. The fleet runs on owned hardware — see the IaC lab layout below for the network it lives on.</title>
-    <rect x="600" y="216" width="260" height="134" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="600" y="216" width="260" height="134" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
   </g>
-  <rect x="612" y="228" width="236" height="30" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="612" y="228" width="236" height="30" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
   <text x="730" y="247" text-anchor="middle" font-weight="600" font-size="11">Model router — fallback · health checks</text>
-  <rect x="612" y="266" width="74" height="30" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="612" y="266" width="74" height="30" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
   <text x="649" y="285" text-anchor="middle" font-size="10.5">RTX 5080</text>
-  <rect x="693" y="266" width="74" height="30" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="693" y="266" width="74" height="30" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
   <text x="730" y="285" text-anchor="middle" font-size="10.5">Mac mini M4</text>
-  <rect x="774" y="266" width="74" height="30" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="774" y="266" width="74" height="30" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
   <text x="811" y="285" text-anchor="middle" font-size="10.5">MBP M5 Pro</text>
   <text x="730" y="322" text-anchor="middle" fill="#64748b" font-size="10">quantized serving · mixture-of-agents pooling</text>
   <text x="730" y="338" text-anchor="middle" fill="#64748b" font-size="10">unit rates derived from measured serving cost</text>
