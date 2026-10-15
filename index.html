@@ -84,6 +84,8 @@
   .diagram g[title]{cursor:help}
   .diagram g:hover rect,.diagram g:hover > rect{stroke:var(--accent)}
   .diagram{width:100%;height:auto;margin:.5rem 0}
+  .diagram text{fill:var(--ink)}
+  .diagram line{fill:none}         /* a line paints no area — its default black fill is inert */   /* SVG text defaults to black; label it with the ink token */
 
   /* ════════════ readiness scoreboard ════════════ */
   .kpi{display:flex;align-items:baseline;gap:var(--gap-sm);flex-wrap:wrap}
@@ -127,47 +129,6 @@
 
   footer{margin-top:3rem;font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:1rem}
 
-  /* ════════════ the hand-drawn diagrams in the markup still carry literal
-     hexes. These rules map every one of them onto the five tokens above, so
-     the page paints the same palette everywhere. ════════════ */
-  [fill="#0f172a"]{fill:var(--ink)}
-  [fill="#18181b"]{fill:var(--ink)}
-  [stroke="#0f172a"]{stroke:var(--ink)}
-  [fill="#64748b"]{fill:var(--muted)}
-  [fill="#94a3b8"]{fill:var(--muted)}
-  [stroke="#94a3b8"]{stroke:var(--muted)}
-  [stroke="#64748b"]{stroke:var(--muted)}
-  [fill="#e2e8f0"]{fill:var(--line)}
-  [stroke="#e2e8f0"]{stroke:var(--line)}
-  [stroke="#cbd5e1"]{stroke:var(--line)}
-  [stroke="#e5e7eb"]{stroke:var(--line)}
-  [fill="#f8fafc"]{fill:var(--mist)}
-  [fill="#f9fafb"]{fill:var(--mist)}
-  [fill="#ffffff"]{fill:var(--paper)}
-  [fill="#fff"]{fill:var(--paper)}
-  [stroke="#ffffff"]{stroke:var(--paper)}
-  [fill="#2563eb"]{fill:var(--accent)}
-  [stroke="#2563eb"]{stroke:var(--accent)}
-  [fill="#3b82f6"]{fill:var(--accent)}
-  [stroke="#3b82f6"]{stroke:var(--accent)}
-  [stop-color="#3b82f6"]{stop-color:var(--accent)}
-  [stop-color="#2563eb"]{stop-color:var(--accent)}
-  [fill="#bfdbfe"]{fill:var(--accent-soft)}
-  [stroke="#bfdbfe"]{stroke:var(--accent-half)}
-  [fill="#bbf7d0"]{fill:var(--accent-soft)}
-  [stroke="#bbf7d0"]{stroke:var(--accent-half)}
-  [stroke="#f0fdf4"]{stroke:var(--accent-soft)}
-  [fill="#f0fdf4"]{fill:var(--accent-soft)}
-  [fill="#059669"]{fill:var(--accent)}
-  [fill="#047857"]{fill:var(--accent)}
-  [stroke="#059669"]{stroke:var(--accent)}
-  [fill="#dc2626"]{fill:var(--ink)}
-  [fill="#fca5a5"]{fill:var(--line)}
-  [stroke="#fca5a5"]{stroke:var(--ink)}
-  [fill="#fef2f2"]{fill:var(--mist)}
-  [fill="#fff5f5"]{fill:var(--mist)}
-  [fill="#6b7280"]{fill:var(--muted)}
-  [flood-color="#0f172a"]{flood-color:var(--ink)}
 </style>
 </head>
 <body>
@@ -279,111 +240,111 @@
   <svg class="diagram" viewBox="0 0 880 420" xmlns="http://www.w3.org/2000/svg" font-family="inherit" font-size="12" role="img" aria-label="cpompa-ai-cloud architecture diagram">
   <defs>
     <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto">
-      <path d="M0,0 L8,3.5 L0,7 z" fill="#94a3b8"/>
+      <path d="M0,0 L8,3.5 L0,7 z" style="fill:var(--muted)"/>
     </marker>
     <marker id="arb" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto">
-      <path d="M0,0 L8,3.5 L0,7 z" fill="#2563eb"/>
+      <path d="M0,0 L8,3.5 L0,7 z" style="fill:var(--accent)"/>
     </marker>
     <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" flood-color="#0f172a" flood-opacity="0.08"/>
+      <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" flood-opacity="0.08" style="flood-color:var(--ink)"/>
     </filter>
     <linearGradient id="cpHead" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#2563eb"/>
+      <stop offset="0" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--accent)"/>
     </linearGradient>
   </defs>
 
   <!-- production badge -->
   <g filter="url(#sh)"><title>Live status: this control plane runs in production at api.cpompa.com — auth-gated, cross-origin status checks blocked.</title>
-    <rect x="596" y="12" width="264" height="26" rx="4" fill="#f0fdf4" stroke="#bbf7d0"/>
-    <circle cx="614" cy="25" r="4.5" fill="#059669"/>
-    <text x="628" y="29" font-size="11" fill="#047857" font-weight="600">PRODUCTION · api.cpompa.com · auth-gated</text>
+    <rect x="596" y="12" width="264" height="26" rx="4" style="fill:var(--accent-soft);stroke:var(--accent-soft)"/>
+    <circle cx="614" cy="25" r="4.5" style="fill:var(--accent)"/>
+    <text x="628" y="29" font-size="11" font-weight="600" style="fill:var(--accent)">PRODUCTION · api.cpompa.com · auth-gated</text>
   </g>
 
   <!-- ══ Clients lane ══ -->
-  <text x="20" y="86" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">CLIENTS</text>
+  <text x="20" y="86" font-size="11" font-weight="700" letter-spacing="1" style="fill:var(--muted)">CLIENTS</text>
   <g filter="url(#sh)"><title>Who talks to the platform: developers via an OpenAI-compatible API (existing OpenAI SDKs work unmodified), agent owners deploying cloud Hermes agents, and Stripe driving subscriptions via webhooks.</title>
-    <rect x="20" y="96" width="170" height="58" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="20" y="96" width="170" height="58" rx="3" style="fill:var(--paper);stroke:var(--line)"/>
     <text x="105" y="120" text-anchor="middle" font-weight="600">Developers</text>
-    <text x="105" y="138" text-anchor="middle" fill="#64748b" font-size="10.5">OpenAI-compatible API</text>
-    <rect x="20" y="174" width="170" height="58" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="105" y="138" text-anchor="middle" font-size="10.5" style="fill:var(--muted)">OpenAI-compatible API</text>
+    <rect x="20" y="174" width="170" height="58" rx="3" style="fill:var(--paper);stroke:var(--line)"/>
     <text x="105" y="198" text-anchor="middle" font-weight="600">Agent owners</text>
-    <text x="105" y="216" text-anchor="middle" fill="#64748b" font-size="10.5">hosted Hermes agents</text>
-    <rect x="20" y="252" width="170" height="58" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="105" y="216" text-anchor="middle" font-size="10.5" style="fill:var(--muted)">hosted Hermes agents</text>
+    <rect x="20" y="252" width="170" height="58" rx="3" style="fill:var(--paper);stroke:var(--line)"/>
     <text x="105" y="276" text-anchor="middle" font-weight="600">Stripe</text>
-    <text x="105" y="294" text-anchor="middle" fill="#64748b" font-size="10.5">subscriptions (test mode)</text>
+    <text x="105" y="294" text-anchor="middle" font-size="10.5" style="fill:var(--muted)">subscriptions (test mode)</text>
   </g>
 
-  <line x1="190" y1="125" x2="244" y2="139" stroke="#64748b" stroke-width="1.5" marker-end="url(#ar)"/>
-  <line x1="190" y1="203" x2="244" y2="195" stroke="#64748b" stroke-width="1.5" marker-end="url(#ar)"/>
-  <line x1="190" y1="281" x2="244" y2="251" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-  <text x="205" y="272" font-size="10" fill="#94a3b8">webhooks</text>
-  <text x="196" y="118" font-size="10" fill="#94a3b8">HTTPS · API keys</text>
+  <line x1="190" y1="125" x2="244" y2="139" stroke-width="1.5" marker-end="url(#ar)" style="stroke:var(--muted)"/>
+  <line x1="190" y1="203" x2="244" y2="195" stroke-width="1.5" marker-end="url(#ar)" style="stroke:var(--muted)"/>
+  <line x1="190" y1="281" x2="244" y2="251" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar)" style="stroke:var(--muted)"/>
+  <text x="205" y="272" font-size="10" style="fill:var(--muted)">webhooks</text>
+  <text x="196" y="118" font-size="10" style="fill:var(--muted)">HTTPS · API keys</text>
 
   <!-- ══ Control plane ══ -->
   <g filter="url(#sh)"><title>The multi-tenant FastAPI control plane — every request is authenticated by tenant API key, metered in units, and rate-limited. Plan entitlements come from Stripe price IDs and fail closed: an unknown price grants nothing.</title>
-    <rect x="250" y="70" width="290" height="280" rx="4" fill="#ffffff" stroke="#bfdbfe"/>
+    <rect x="250" y="70" width="290" height="280" rx="4" style="fill:var(--paper);stroke:var(--accent-soft)"/>
     <rect x="250" y="70" width="290" height="34" rx="4" fill="url(#cpHead)"/>
-    <rect x="250" y="92" width="290" height="12" fill="#2563eb"/>
-    <text x="395" y="92" text-anchor="middle" fill="#ffffff" font-weight="700" font-size="12.5">CONTROL PLANE — FastAPI</text>
+    <rect x="250" y="92" width="290" height="12" style="fill:var(--accent)"/>
+    <text x="395" y="92" text-anchor="middle" font-weight="700" font-size="12.5" style="fill:var(--paper)">CONTROL PLANE — FastAPI</text>
   </g>
   <g font-size="11.5">
-    <rect x="266" y="116" width="258" height="46" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+    <rect x="266" y="116" width="258" height="46" rx="3" style="fill:var(--mist);stroke:var(--line)"/>
     <text x="276" y="134" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="10.5">/v1/chat/completions</text>
-    <text x="276" y="150" fill="#64748b" font-size="10">metered in units · API keys · rate limits</text>
-    <rect x="266" y="172" width="258" height="46" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="276" y="150" font-size="10" style="fill:var(--muted)">metered in units · API keys · rate limits</text>
+    <rect x="266" y="172" width="258" height="46" rx="3" style="fill:var(--mist);stroke:var(--line)"/>
     <text x="276" y="190" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="10.5">/agents  ·  /messages  ·  /logs</text>
-    <text x="276" y="206" fill="#64748b" font-size="10">hosted agents · tools · SSE streaming turns</text>
-    <rect x="266" y="228" width="258" height="46" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="276" y="206" font-size="10" style="fill:var(--muted)">hosted agents · tools · SSE streaming turns</text>
+    <rect x="266" y="228" width="258" height="46" rx="3" style="fill:var(--mist);stroke:var(--line)"/>
     <text x="276" y="246" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="10.5">/plans  ·  /checkout  ·  /usage</text>
-    <text x="276" y="262" fill="#64748b" font-size="10">entitlements fail closed from Stripe price IDs</text>
-    <rect x="266" y="284" width="258" height="46" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="276" y="262" font-size="10" style="fill:var(--muted)">entitlements fail closed from Stripe price IDs</text>
+    <rect x="266" y="284" width="258" height="46" rx="3" style="fill:var(--mist);stroke:var(--line)"/>
     <text x="276" y="302" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="10.5">/nodes  ·  /pair-nodes</text>
-    <text x="276" y="318" fill="#64748b" font-size="10">fleet view · bring-your-own-hardware (mTLS)</text>
+    <text x="276" y="318" font-size="10" style="fill:var(--muted)">fleet view · bring-your-own-hardware (mTLS)</text>
   </g>
 
-  <line x1="540" y1="139" x2="594" y2="139" stroke="#64748b" stroke-width="1.5" marker-end="url(#ar)"/>
-  <line x1="540" y1="195" x2="594" y2="195" stroke="#64748b" stroke-width="1.5" marker-end="url(#ar)"/>
-  <line x1="540" y1="307" x2="606" y2="246" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arb)"/>
-  <text x="548" y="300" font-size="10" fill="#2563eb">proxy / escalate</text>
+  <line x1="540" y1="139" x2="594" y2="139" stroke-width="1.5" marker-end="url(#ar)" style="stroke:var(--muted)"/>
+  <line x1="540" y1="195" x2="594" y2="195" stroke-width="1.5" marker-end="url(#ar)" style="stroke:var(--muted)"/>
+  <line x1="540" y1="307" x2="606" y2="246" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arb)" style="stroke:var(--accent)"/>
+  <text x="548" y="300" font-size="10" style="fill:var(--accent)">proxy / escalate</text>
 
   <!-- ══ Datastores lane ══ -->
-  <rect x="590" y="74" width="282" height="290" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
-  <text x="600" y="86" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">RUNTIME — DATA &amp; COMPUTE</text>
+  <rect x="590" y="74" width="282" height="290" rx="4" style="fill:var(--mist);stroke:var(--line)"/>
+  <text x="600" y="86" font-size="11" font-weight="700" letter-spacing="1" style="fill:var(--muted)">RUNTIME — DATA &amp; COMPUTE</text>
   <g filter="url(#sh)"><title>PostgreSQL holds tenancy, metering and billing data (schema changes go through alembic migrations). Redis handles rate-limit leases and transient-error retries — see the deadlock-retry work in the repo.</title>
-    <rect x="600" y="96" width="124" height="86" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="600" y="96" width="124" height="86" rx="3" style="fill:var(--paper);stroke:var(--line)"/>
     <text x="662" y="130" text-anchor="middle" font-weight="600">PostgreSQL</text>
-    <text x="662" y="148" text-anchor="middle" fill="#64748b" font-size="10">tenancy · metering</text>
-    <text x="662" y="163" text-anchor="middle" fill="#64748b" font-size="10">alembic migrations</text>
-    <rect x="736" y="96" width="124" height="86" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="662" y="148" text-anchor="middle" font-size="10" style="fill:var(--muted)">tenancy · metering</text>
+    <text x="662" y="163" text-anchor="middle" font-size="10" style="fill:var(--muted)">alembic migrations</text>
+    <rect x="736" y="96" width="124" height="86" rx="3" style="fill:var(--paper);stroke:var(--line)"/>
     <text x="798" y="130" text-anchor="middle" font-weight="600">Redis</text>
-    <text x="798" y="148" text-anchor="middle" fill="#64748b" font-size="10">leases · rate limits</text>
-    <text x="798" y="163" text-anchor="middle" fill="#64748b" font-size="10">transient retries</text>
+    <text x="798" y="148" text-anchor="middle" font-size="10" style="fill:var(--muted)">leases · rate limits</text>
+    <text x="798" y="163" text-anchor="middle" font-size="10" style="fill:var(--muted)">transient retries</text>
   </g>
 
   <!-- ══ Model fleet lane ══ -->
-  <text x="600" y="206" font-size="11" fill="#94a3b8" font-weight="700" letter-spacing="1">MODEL FLEET</text>
+  <text x="600" y="206" font-size="11" font-weight="700" letter-spacing="1" style="fill:var(--muted)">MODEL FLEET</text>
   <g filter="url(#sh)"><title>Self-hosted serving fleet behind a custom router with health checks and role-based fallback. The fleet runs on owned hardware — see the IaC lab layout below for the network it lives on.</title>
-    <rect x="600" y="216" width="260" height="134" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="600" y="216" width="260" height="134" rx="3" style="fill:var(--paper);stroke:var(--line)"/>
   </g>
-  <rect x="612" y="228" width="236" height="30" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="612" y="228" width="236" height="30" rx="3" style="fill:var(--mist);stroke:var(--line)"/>
   <text x="730" y="247" text-anchor="middle" font-weight="600" font-size="11">Model router — fallback · health checks</text>
-  <rect x="612" y="266" width="74" height="30" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="612" y="266" width="74" height="30" rx="3" style="fill:var(--mist);stroke:var(--line)"/>
   <text x="649" y="285" text-anchor="middle" font-size="10.5">RTX 5080</text>
-  <rect x="693" y="266" width="74" height="30" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="693" y="266" width="74" height="30" rx="3" style="fill:var(--mist);stroke:var(--line)"/>
   <text x="730" y="285" text-anchor="middle" font-size="10.5">Mac mini M4</text>
-  <rect x="774" y="266" width="74" height="30" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="774" y="266" width="74" height="30" rx="3" style="fill:var(--mist);stroke:var(--line)"/>
   <text x="811" y="285" text-anchor="middle" font-size="10.5">MBP M5 Pro</text>
-  <text x="730" y="322" text-anchor="middle" fill="#64748b" font-size="10">quantized serving · mixture-of-agents pooling</text>
-  <text x="730" y="338" text-anchor="middle" fill="#64748b" font-size="10">unit rates derived from measured serving cost</text>
+  <text x="730" y="322" text-anchor="middle" font-size="10" style="fill:var(--muted)">quantized serving · mixture-of-agents pooling</text>
+  <text x="730" y="338" text-anchor="middle" font-size="10" style="fill:var(--muted)">unit rates derived from measured serving cost</text>
 
   <!-- ══ Runtime footer ══ -->
-  <line x1="20" y1="372" x2="860" y2="372" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="20" y="394" font-size="10.5" fill="#64748b">Runtime: hardened Docker stack on owned hardware — non-root images, SHA-pinned deploys, automated rollback + smoke checks</text>
+  <line x1="20" y1="372" x2="860" y2="372" stroke-width="1" style="stroke:var(--line)"/>
+  <text x="20" y="394" font-size="10.5" style="fill:var(--muted)">Runtime: hardened Docker stack on owned hardware — non-root images, SHA-pinned deploys, automated rollback + smoke checks</text>
   <g transform="translate(700,382)">
-    <line x1="0" y1="8" x2="22" y2="8" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#ar)"/>
-    <text x="28" y="11" font-size="10" fill="#64748b">sync request</text>
-    <line x1="100" y1="8" x2="122" y2="8" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-    <text x="128" y="11" font-size="10" fill="#64748b">async / proxy</text>
+    <line x1="0" y1="8" x2="22" y2="8" stroke-width="1.3" marker-end="url(#ar)" style="stroke:var(--muted)"/>
+    <text x="28" y="11" font-size="10" style="fill:var(--muted)">sync request</text>
+    <line x1="100" y1="8" x2="122" y2="8" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#ar)" style="stroke:var(--muted)"/>
+    <text x="128" y="11" font-size="10" style="fill:var(--muted)">async / proxy</text>
   </g>
 </svg>
 </section>
