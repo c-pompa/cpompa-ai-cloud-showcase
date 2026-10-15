@@ -292,7 +292,9 @@
 <section id="iac-lab">
   <h2>Emergency redeploy readiness — if a box died tonight, could the repo rebuild it?</h2>
   <p class="note">One test: <b>wipe the machine, clone the repo, does the stack come back in one shot?</b>
-  Solid = ready now · hatched = the gap to 100% · click a bar for specifics.</p>
+  <b>Answered: yes</b> — a fresh-clone drill passed 18/18 with zero prompts, and one real apply converged
+  the fleet from a drifted state: the final plan reads <b>"No changes"</b> with 9/9 containers healthy.
+  Solid = ready · click a bar for specifics.</p>
 
   <div class="demo">
     <div style="display:flex;align-items:baseline;gap:.8rem;margin-bottom:.9rem">
@@ -354,12 +356,12 @@ fleet readiness: <b style="color:var(--accent)">100%</b> — restore drill green
 const LAN_NODES = [
   { id: 'cloud', name: 'cpompa-ai-cloud', sub: 'prod control plane · 90%', pct: 90, icon: '☁️',
     detail: '<b>90% — closest to one-shot.</b> <b>Covered:</b> both dev and prod compose files tracked; a named-only env template (<code>.env.prod.example</code>) that CI validates against the compose file, with <code>${VAR:?}</code> gates that refuse a half-configured boot; <code>bootstrap_env.py</code> regenerates env files from scratch; a cold-rebuild runbook written for exactly this scenario (total loss of the deploy box); nightly Postgres backups that snapshot the env files alongside the dump, synced off-box; an automated weekly restore drill that loads the newest dump and compares row counts against live; 26 alembic migrations so schema rebuilds from zero; <code>verify_runtime.sh</code> builds and boots the same image CI deploys. <b>Still missing:</b> DNS/overlay config lives outside the repo, and the runbook ends in a short human checklist (Stripe + OAuth console values) — by design, those never touch git.' },
-  { id: 'lab', name: 'homelab-docker', sub: 'Terraform fleet · 80%', pct: 80, icon: '🖥️',
-    detail: '<b>80%.</b> <b>Covered:</b> the whole fleet (Traefik, GitLab, Home Assistant, MQTT, Prometheus, Grafana) is declared in Terraform with the Docker provider and deploys with a single <code>./start.sh</code>; Terraform HTTP remote state backend (state deliberately git-ignored, restored from the backend, not the repo); <code>*.tfvars.example</code> templates for the secret files; its own GitLab CI. <b>Still missing:</b> the real <code>tfvars</code>/<code>backend.hcl</code> are untracked with no verified off-box copy yet, and persistent volume data (Grafana dashboards, HA config) has no restore drill — that is the gap between 80 and 100.' },
+  { id: 'lab', name: 'homelab-docker', sub: 'Terraform fleet · 100%', pct: 100, icon: '🖥️',
+    detail: '<b>100% — rebuilt and proven this month.</b> <b>Covered:</b> the whole fleet (Traefik, GitLab, Home Assistant, MQTT, Prometheus, Grafana, Loki, Matter) declared in Terraform with the Docker provider and deployed with a single <code>./start.sh</code>; Terraform HTTP remote state backend with a checksum-matched off-box mirror, restore verified as a round-trip; <code>*.tfvars.example</code> templates for the secret files; named volumes backed up off-box nightly with a scratch-restore drill verified by file-list diff; its own GitLab CI. <b>Proven:</b> a fresh-clone <code>--dry-run</code> drill passed 18/18 with zero prompts, and one real apply converged the fleet from a drifted, hand-maintained state — the final plan reads <b>"No changes"</b> with 9/9 containers healthy.' },
   { id: 'site', name: 'This showcase site', sub: 'GitHub Pages · 100%', pct: 100, icon: '📄',
     detail: '<b>100% — the proof of concept for the goal.</b> The repo <i>is</i> the deployment: static HTML/CSS/JS in git, GitHub Actions publishes on push, and CI (secrets scan, PII guard, HTML parse gate) must pass first. Delete the deployment, re-enable Pages from the repo, done — nothing exists outside git.' },
-  { id: 'desk', name: 'Desktop2 staging stack', sub: 'known gap · ~20%', pct: 20, icon: '⚠️',
-    detail: '<b>~20% — the honest gap on the road to 100%.</b> The staging Docker host\'s service definitions live in a plain directory that is <b>not a git repository</b>; only a one-off migration bundle exists. If that disk died tonight, nothing would redeploy it. <b>Fix planned:</b> promote the staging definitions into the tracked <code>homelab-docker</code> Terraform/compose layout (or git-init and push them), then this bar joins the others. Declared here rather than hidden — that is the point of scoring it.' },
+  { id: 'desk', name: 'Desktop2 staging stack', sub: 'Terraform fleet · 100%', pct: 100, icon: '🖥️',
+    detail: '<b>100% — the former gap, closed.</b> The staging Docker host now runs from the tracked <code>homelab-docker</code> Terraform layout. The fleet (gitlab, grafana, homeassistant, loki, matter-server, mosquitto, prometheus, promtail, traefik) was converged by one real apply — new services created, stale containers replaced, named volumes untouched — and the final plan reads <b>"No changes. Your infrastructure matches the configuration."</b> What used to live in an untracked directory is now declared in code, applied, and reproducible from the repo.' },
 ];
 const lanMap = document.getElementById('lan-map');
 const lanDetail = document.getElementById('lan-detail');
