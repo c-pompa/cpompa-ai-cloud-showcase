@@ -419,7 +419,8 @@ showNode(0); // default: the control plane
       set('down', 'Control plane answered but is not CORS-enabled for public status checks', 'Control plane — cross-origin checks blocked');
     }
   } catch {
-    set('down', 'Status couldn\'t be verified from this browser (CORS or network)', 'Control plane — status unverifiable from browser');
+    // browser couldn't reach the API — show a neutral badge, no status claim
+    set('down', '', 'Control plane');
   }
 })();
 
