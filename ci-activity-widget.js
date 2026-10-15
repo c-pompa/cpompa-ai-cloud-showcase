@@ -1,21 +1,21 @@
 (function(){
   var css = document.createElement('style');
   css.textContent = [
-    '#ci-root{font:13px/1.5 var(--font,system-ui);color:var(--foreground);max-width:720px;margin-bottom:1.5rem}',
+    '#ci-root{font:13px/1.5 var(--font,inherit);color:var(--ink);max-width:720px;margin-bottom:1.5rem}',
     '#ci-root .stats{display:flex;gap:1.25rem;flex-wrap:wrap;margin:.5rem 0 .25rem}',
     '#ci-root .stat b{font-size:1.25rem;display:block}',
-    '#ci-root .stat span{color:var(--muted-foreground);font-size:.8rem}',
+    '#ci-root .stat span{color:var(--muted);font-size:.8rem}',
     '#ci-root .bars{display:flex;gap:2px;height:110px;margin:.75rem 0 .25rem}',
     '#ci-root .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;min-width:3px}',
     '#ci-root .bar:hover .s{filter:brightness(1.25)}',
     '#ci-root .bar .s{background:var(--accent);border-radius:1px 1px 0 0}',
-    '#ci-root .bar .f{background:var(--border)}',
-    '#ci-root .xl{display:flex;gap:2px;color:var(--muted-foreground);font-size:.65rem}',
+    '#ci-root .bar .f{background:var(--line)}',
+    '#ci-root .xl{display:flex;gap:2px;color:var(--muted);font-size:.65rem}',
     '#ci-root .xl span{flex:1;text-align:center;min-width:3px;white-space:nowrap}',
-    '#ci-root .legend{color:var(--muted-foreground);font-size:.75rem;margin-top:.5rem}',
+    '#ci-root .legend{color:var(--muted);font-size:.75rem;margin-top:.5rem}',
     '#ci-root .dot{display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:middle;margin:0 4px 0 10px}',
     '#ci-root [data-tip]{position:relative;cursor:help}',
-    '#ci-root [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:0;z-index:9;background:var(--foreground);color:var(--background);padding:.4rem .6rem;border-radius:6px;font-size:.72rem;line-height:1.45;white-space:normal;width:max-content;max-width:240px;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.18)}'
+    '#ci-root [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:0;z-index:9;background:var(--ink);color:var(--paper);padding:.4rem .6rem;border-radius:var(--radius-sm,2px);font-size:.72rem;line-height:1.45;white-space:normal;width:max-content;max-width:240px;pointer-events:none;box-shadow:0 4px 12px rgba(15,23,42,.18)}'
   ].join('\n');
   document.head.appendChild(css);
   var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -42,6 +42,6 @@
       + '<div class="bars">'+labels.map(function(_,i){return bar(counts[i],succ[i],i);}).join('')+'</div>'
       + '<div class="xl">'+labels.map(function(l,i){return i%4===0?'<span>'+l+'</span>':'<span></span>';}).join('')+'</div>'
       + '<div class="legend"><span class="dot" style="background:var(--accent)"></span>passed'
-      + '<span class="dot" style="background:var(--border)"></span>failed/canceled &mdash; every MR, dev push, and prod deploy ran the full gate: ruff &middot; pytest &middot; docker build &middot; secrets-scan &middot; config-scan &middot; deps-audit &middot; image-scan</div>';
+      + '<span class="dot" style="background:var(--line)"></span>failed/canceled &mdash; every MR, dev push, and prod deploy ran the full gate: ruff &middot; pytest &middot; docker build &middot; secrets-scan &middot; config-scan &middot; deps-audit &middot; image-scan</div>';
   });
 })();
