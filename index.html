@@ -8,71 +8,114 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
+  /* ════════════ design tokens — change a value here, not in the markup ════════════ */
   :root{
     --bg:#ffffff; --fg:#18181b; --muted:#6b7280; --border:#e5e7eb;
-    --accent:#2563eb; --card:#f9fafb; --green:#059669; --red:#dc2626;
+    --hairline:rgba(27,38,44,.12); --surface:#ffffff; --card:#f9fafb;
+    --accent:#2563eb; --green:#059669; --red:#dc2626;
+    --radius:6px; --radius-sm:4px; --radius-pill:99px;
+    --elev:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45);
+    --fs-caption:.74rem; --fs-small:.85rem; --fs-body:.95rem;
+    --gap-xs:.4rem; --gap-sm:.7rem; --gap:.9rem; --gap-lg:1.4rem;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+
+  /* ════════════ base type — the reset kills paragraph margins, so restore rhythm ════════════ */
   body{font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;max-width:880px;margin:0 auto;padding:2.5rem 1.25rem 5rem}
-  a{color:var(--accent);text-decoration:none}
-  a:hover{text-decoration:underline}
-  h1,h2,h3{font-family:"Barlow Semi Condensed","Public Sans",sans-serif}   /* same three fonts as threejs-lab.html */
-  code,.tag{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+  h1,h2,h3,h4{font-family:"Barlow Semi Condensed","Public Sans",sans-serif}
+  code,.tag,.terminal{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
   h1{font-size:2.3rem;letter-spacing:-.01em}
   h2{font-size:1.4rem;margin:2.5rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
   h3{font-size:1.12rem;margin:1.4rem 0 .3rem}
+  p+p{margin-top:.6rem}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.05rem .3rem;font-size:.82em}
   .sub{color:var(--muted);margin-top:.25rem}
-  .contact{margin:.75rem 0 0;font-size:.95rem}
+  .lede{font-size:var(--fs-body)}
+  .note{font-size:var(--fs-small);color:var(--muted)}
+  .caption{font-size:var(--fs-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+  /* ════════════ header ════════════ */
+  .contact{margin:.75rem 0 0;font-size:var(--fs-body)}
   .contact span{margin-right:1rem}
   .icon{display:inline-flex;align-items:center;vertical-align:middle}
   .icon svg{width:20px;height:20px;fill:currentColor}
   .icon:hover{color:var(--accent)}
-  .btn{display:inline-block;background:var(--accent);color:#fff;padding:.5rem 1rem;border-radius:6px;font-weight:600;font-size:.9rem}
+
+  /* ════════════ calls to action — one row, equal weight, even gaps ════════════ */
+  .cta{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.5rem}
+  .btn{display:inline-block;background:var(--accent);color:#fff;padding:.5rem 1rem;border-radius:var(--radius);font-weight:600;font-size:.9rem}
   .btn:hover{text-decoration:none;opacity:.9}
-  .card{background:var(--card);border:1px solid rgba(27,38,44,.12);border-radius:6px;padding:1.25rem 1.4rem;margin:0 0 1rem;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)}
+  .btn-ghost{background:var(--card);color:var(--accent);border:1px solid var(--border)}
+
+  /* ════════════ surfaces — every box on the page is drawn in ONE place ════════════ */
+  .card,.panel,.stage,.rowbtn,.terminal{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius);box-shadow:var(--elev)}
+  .card{padding:1.25rem var(--gap-lg);margin:0 0 1rem}
   .card p{color:var(--muted);font-size:.93rem}
-  .tag{display:inline-block;font-size:.75rem;color:var(--muted);background:#eef2ff;border-radius:4px;padding:.1rem .5rem;margin:.35rem .35rem 0 0}
-  .cta{margin-top:1.5rem}
-  /* pipeline */
+  .card p b,.card li b{color:var(--fg)}
+  .card ul{margin:.4rem 0 0;padding-left:1.1rem;font-size:.93rem;color:var(--muted)}
+  .card li{margin-bottom:.3rem}
+  .panel{background:var(--card);padding:1.25rem var(--gap-lg)}
+  .panel+.panel{margin-top:var(--gap-lg)}
+  .panel-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:var(--gap-sm);margin-bottom:var(--gap)}
+  .tag{display:inline-block;font-size:.75rem;color:var(--muted);background:#eef2ff;border-radius:var(--radius-sm);padding:.1rem .5rem;margin:.35rem .35rem 0 0}
+
+  /* ════════════ CI pipeline strip ════════════ */
   .pipe{display:flex;flex-wrap:wrap;gap:.5rem .4rem;align-items:stretch;margin:1rem 0}
-  .stage{border:1px solid rgba(27,38,44,.12);border-radius:6px;padding:.45rem .7rem;font-size:.8rem;background:#fff;flex:0 0 auto;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)}
+  .stage{padding:.45rem .7rem;font-size:.8rem;flex:0 0 auto}
   .stage b{display:block;font-size:.78rem;white-space:nowrap}
   .stage small{color:var(--muted);font-size:.7rem;display:block;max-width:190px}
   .sec{border-color:#fca5a5;background:#fff5f5}
   .arrow{color:var(--muted);font-size:.8rem}
-  /* hover tooltips */
+
+  /* ════════════ diagrams + tooltips ════════════ */
   [data-tip]{position:relative;cursor:help}
-  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:0;z-index:9;background:var(--fg);color:var(--bg);padding:.4rem .6rem;border-radius:6px;font-size:.72rem;line-height:1.45;font-weight:400;text-align:left;white-space:normal;width:max-content;max-width:250px;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:0;z-index:9;background:var(--fg);color:var(--bg);padding:.4rem .6rem;border-radius:var(--radius);font-size:.72rem;line-height:1.45;font-weight:400;text-align:left;white-space:normal;width:max-content;max-width:250px;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.15)}
   .diagram g[title]{cursor:help}
   .diagram g:hover rect,.diagram g:hover > rect{stroke:var(--accent)}
-  /* diagram */
   .diagram{width:100%;height:auto;margin:.5rem 0}
-  .note{font-size:.85rem;color:var(--muted)}
 
-  .demo{background:var(--card);border:1px solid rgba(27,38,44,.12);border-radius:6px;padding:1.25rem 1.4rem;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)}
-  .qbtn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:.75rem;font-weight:700;cursor:pointer;vertical-align:middle;margin-left:.4rem}
-  .qbtn:hover{color:var(--accent);border-color:var(--accent)}
-  .qbtn[aria-expanded="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .detail{margin-top:1.25rem}
-  .live{display:inline-flex;align-items:center;gap:.35rem;font-size:.85rem;border:1px solid var(--border);border-radius:99px;padding:.15rem .7rem;background:var(--card)}
-  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
-  .live.up{border-color:#bbf7d0;background:#f0fdf4;color:var(--green)}
-  .live.up .dot{background:var(--green)}
-  .live.down{color:var(--muted)}
-  .demo label{font-weight:600;font-size:.9rem}
-  .demo input[type=range]{width:100%;margin:.5rem 0}
-  .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem;margin-top:1rem}
-  .plan{border:1px solid rgba(27,38,44,.12);border-radius:6px;padding:.75rem;background:#fff;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)}
-  .est{font-size:.8rem;color:var(--muted)}
-  .plan b{font-size:.9rem}
-  .plan .price{font-size:1.3rem;font-weight:700;margin-top:.2rem}
-  .plan.hot{border-color:var(--accent)}
-  .benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
-  .benefits .card{margin-bottom:0}
-  .benefits ul{padding-left:1.1rem;font-size:.88rem;color:var(--muted)}
-  .benefits li{margin-bottom:.5rem}
-  .benefits li b{color:var(--fg)}
-  code{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:.05rem .3rem;font-size:.82em}
+  /* ════════════ readiness scoreboard ════════════ */
+  .kpi{display:flex;align-items:baseline;gap:var(--gap-sm);flex-wrap:wrap}
+  .kpi b{font-size:2.4rem;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .kpi small{font-size:var(--fs-small);color:var(--muted)}
+  .chip{display:inline-block;font-size:var(--fs-caption);font-weight:600;border-radius:var(--radius-pill);padding:.12rem .55rem;background:var(--card);border:1px solid var(--border);color:var(--muted)}
+  .chip.ok{color:var(--green);border-color:#bbf7d0;background:#f0fdf4}
+  .chip.gap{color:var(--red);border-color:#fecaca;background:#fef2f2}
+  .verdict{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;margin:var(--gap) 0}
+  .verdict > span:last-child{flex:1 1 380px;font-size:var(--fs-small);color:var(--muted)}
+  .verdict b{color:var(--fg)}
+  .rows{display:grid;gap:var(--gap-sm)}
+  .rowbtn{display:block;width:100%;text-align:left;font:inherit;padding:.6rem .8rem;cursor:pointer;transition:border-color .12s}
+  .rowbtn:hover{border-color:var(--accent)}
+  .rowbtn[aria-pressed="true"]{border-color:var(--accent);box-shadow:var(--elev),inset 0 0 0 1px var(--accent)}
+  .row-top{display:flex;align-items:baseline;gap:var(--gap-sm);flex-wrap:wrap}
+  .row-name{font-weight:600}
+  .row-sub{font-size:var(--fs-caption);color:var(--muted)}
+  .row-pct{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums}
+  .meter{display:block;height:12px;margin-top:var(--gap-xs);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:repeating-linear-gradient(45deg,transparent,transparent 4px,var(--border) 4px,var(--border) 7px)}
+  .meter i{display:block;height:100%;background:var(--muted)}
+  .meter i.full{background:var(--accent)}
+
+  /* the audit itself: a verdict + two labelled lists, never one paragraph */
+  .detail{margin-top:var(--gap);border-top:1px solid var(--border);padding-top:var(--gap)}
+  .detail-verdict{font-size:var(--fs-small);color:var(--muted)}
+  .detail-verdict b{color:var(--fg)}
+  .detail-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--gap) var(--gap-lg);margin-top:var(--gap-sm)}
+  .detail h4{font-family:inherit;font-size:var(--fs-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .detail ul{margin:.3rem 0 0;padding-left:1.1rem}
+  .detail li{font-size:var(--fs-small);color:var(--muted);margin-bottom:.3rem}
+  .detail li b{color:var(--fg)}
+  .detail p{font-size:var(--fs-small);color:var(--muted);margin-top:.3rem}
+
+  /* ════════════ terminal boards (target vs today) ════════════ */
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--gap-lg)}
+  .terminal{margin:.4rem 0 0;padding:.85rem .9rem;background:var(--surface);font-size:var(--fs-small);line-height:1.7;overflow:auto}
+  .terminal .dim{color:var(--muted)}
+  .terminal .ok{color:var(--accent)}
+  .terminal .gap{color:var(--red)}
+
   footer{margin-top:3rem;font-size:.8rem;color:var(--muted);border-top:1px solid var(--border);padding-top:1rem}
 </style>
 </head>
@@ -87,12 +130,10 @@
     <span><a class="icon" href="https://github.com/search?q=author%3Ac-pompa+repo%3Anousresearch%2Fhermes-agent&type=pullrequests" title="Hermes Agent PRs (13)" aria-label="Hermes PRs"><svg viewBox="0 0 24 24"><path d="M6 2a3 3 0 0 1 1 5.83V16a3 3 0 1 1-2 0V7.83A3 3 0 0 1 6 2zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm0 12a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm12-1.83V9a3 3 0 0 0-3-3h-2.6l1.8-1.8L12.8 2.8 9 6.6l3.8 3.8 1.4-1.4L12.4 7H15a1 1 0 0 1 1 1v7.17a3 3 0 1 0 2 0z"/></svg></a></span>
   </p>
   <p class="cta">
-    <a class="btn" href="#iac-lab">▶ Emergency redeploy readiness — every repo scored ↓</a>
-    <a class="btn" style="background:var(--card);color:var(--accent);border:1px solid var(--border)" href="https://github.com/c-pompa/cpompa-ai-cloud-showcase" target="_blank" rel="noopener">View source &amp; docs on GitHub</a>
-    <a href="#projects" style="margin-left:.5rem">See the work ↓</a>
+    <a class="btn" href="#iac-lab">Emergency redeploy readiness &darr;</a>
+    <a class="btn btn-ghost" href="https://github.com/c-pompa/cpompa-ai-cloud-showcase" target="_blank" rel="noopener">View source &amp; docs on GitHub</a>
+    <a class="btn btn-ghost" href="#projects">See the work &darr;</a>
   </p>
-  <p class="note" style="margin-top:.75rem">Below: a scored audit of whether each repo could
-  rebuild its stack from zero in one shot, and the CI activity chart rendered from real GitLab pipeline history.</p>
 </header>
 
 <section id="about">
@@ -115,10 +156,15 @@
     OpenAI-compatible endpoint metered in units, or deploy their own cloud Hermes agent with tools, logs,
     and streaming turns. Multi-tenant FastAPI + PostgreSQL/Redis on my own hardware, with Stripe
     (test-mode) subscription billing and API-key management.</p>
-    <p><b>Highlights:</b> per-tenant usage metering · plan entitlements that fail closed · hardened Docker
-    runtime (non-root, no package manager at runtime, SHA-pinned deploys with rollback + smoke checks) ·
-    alembic schema migrations · full CI security pipeline (below).</p>
-    <span class="tag">FastAPI</span><span class="tag">PostgreSQL</span><span class="tag">Redis</span><span class="tag">Docker</span><span class="tag">Stripe</span><span class="tag">GitLab CI</span><span class="tag">OpenTofu</span>
+<p><b>Highlights:</b></p>
+    <ul>
+      <li>per-tenant usage metering</li>
+      <li>plan entitlements that fail closed</li>
+      <li>hardened Docker runtime — non-root, no package manager at runtime, SHA-pinned deploys with rollback + smoke checks</li>
+      <li>alembic schema migrations</li>
+      <li>full CI security pipeline (below)</li>
+    </ul>
+    <span class="tag">OpenTofu</span>
   </div>
 
   <div class="card">
@@ -139,14 +185,18 @@
 
   <div class="card">
     <h3>Hermes Agent — desktop plugin suite (6 plugins)</h3>
-    <p>Six production plugins for the Hermes desktop app + backend, all thin-plugin/fat-core (stdlib-only
-    cores, backend APIs mounted at <code>/api/plugins/&lt;id&gt;/</code>): <b>fork-upgrader</b> — tracks
-    upstream drift on a vendored fork and drives a gated prepare&nbsp;→&nbsp;test&nbsp;→&nbsp;publish&nbsp;→&nbsp;deploy
-    upgrade pipeline from the desktop; <b>smart-router-studio</b> — GPU-fleet model catalog with size/guardrail
-    budgeting and SSH-probed multi-host downloads; <b>model-router</b> — presence-aware role-alias router with
-    registered read-only agent tools; <b>metrics-dashboard</b> — live LLM request metrics, health findings, and
-    usage map; plus <b>model-providers</b> and <b>hermes-achievements</b> (session-scanning achievement engine).</p>
-    <span class="tag">Python</span><span class="tag">Plugin APIs</span><span class="tag">Agent tools</span><span class="tag">Desktop UI</span><span class="tag">Stdlib-only cores</span>
+<p>Six production plugins for the Hermes desktop app + backend, all thin-plugin/fat-core
+    (stdlib-only cores, backend APIs mounted at <code>/api/plugins/&lt;id&gt;/</code>):</p>
+    <ul>
+      <li><b>fork-upgrader</b> — tracks upstream drift on a vendored fork and drives a gated
+      prepare&nbsp;→&nbsp;test&nbsp;→&nbsp;publish&nbsp;→&nbsp;deploy upgrade pipeline from the desktop.</li>
+      <li><b>smart-router-studio</b> — GPU-fleet model catalog with size/guardrail budgeting and
+      SSH-probed multi-host downloads.</li>
+      <li><b>model-router</b> — presence-aware role-alias router with registered read-only agent tools.</li>
+      <li><b>metrics-dashboard</b> — live LLM request metrics, health findings, and usage map.</li>
+      <li><b>model-providers</b> and <b>hermes-achievements</b> (a session-scanning achievement engine).</li>
+    </ul>
+    <span class="tag">Stdlib-only cores</span>
   </div>
 </section>
 
@@ -288,35 +338,37 @@
 </section>
 
 <section id="iac-lab">
-  <h2>Emergency redeploy readiness — if a box died tonight, could the repo rebuild it?</h2>
-  <p class="note">One test: <b>wipe the machine, clone the repo, does the stack come back in one shot?</b>
-  <b>Answered: yes</b> — a fresh-clone drill passed 18/18 with zero prompts, and one real apply converged
-  the fleet from a drifted state: the final plan reads <b>"No changes"</b> with 9/9 containers healthy.
-  Solid = ready · click a bar for specifics.</p>
+  <h2>Emergency redeploy readiness</h2>
+  <p class="lede">If a box died tonight, could the repo rebuild it? One test: <b>wipe the machine,
+  clone the repo, does the stack come back in one shot?</b></p>
+  <p class="verdict"><span class="chip ok">Answered: yes</span>
+  <span>a fresh-clone drill passed <b>18/18</b> with zero prompts, and one real apply converged the
+  fleet from a drifted state — the final plan reads <b>&ldquo;No changes&rdquo;</b> with
+  <b>9/9</b> containers healthy.</span></p>
 
-  <div class="demo">
-    <div style="display:flex;align-items:baseline;gap:.8rem;margin-bottom:.9rem">
-      <div id="fleet-pct" style="font-size:2.6rem;font-weight:800;letter-spacing:-.02em">—</div>
-      <div class="note">fleet average — the number that has to read <b>100%</b></div>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="kpi"><b id="fleet-pct">—</b><small id="fleet-note">fleet average</small></div>
+      <p class="caption">Click a row for its audit</p>
     </div>
-    <div id="lan-map" style="display:grid;gap:.55rem"></div>
-    <p class="note" id="lan-detail" style="margin-top:.9rem"></p>
+    <div id="lan-map" class="rows"></div>
+    <div id="lan-detail" class="detail"></div>
   </div>
 
-  <div class="demo" style="margin-top:1rem">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem">
+  <div class="panel">
+    <div class="cols">
       <div>
-        <div class="est" style="margin-bottom:.5rem">THE TARGET — 100% looks like this</div>
-        <pre style="margin:0;padding:.9rem;background:var(--card);border:1px solid rgba(27,38,44,.12);border-radius:6px;overflow:auto;font-size:.85rem;line-height:1.7;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)">$ ./bootstrap.sh   <span class="note"># the only step</span>
-<span style="color:var(--accent)">✓</span> cpompa-ai-cloud ........ 100%
-<span style="color:var(--accent)">✓</span> homelab-docker ......... 100%
-<span style="color:var(--accent)">✓</span> showcase site .......... 100%
-<span style="color:var(--accent)">✓</span> staging stack .......... 100%
-fleet readiness: <b style="color:var(--accent)">100%</b> — restore drill green, nothing outside git</pre>
+        <p class="caption">The target — 100% looks like this</p>
+        <pre class="terminal"><span class="dim">$</span> ./bootstrap.sh   <span class="dim"># the only step</span>
+<span class="ok">✓</span> cpompa-ai-cloud ........ 100%
+<span class="ok">✓</span> homelab-docker ......... 100%
+<span class="ok">✓</span> showcase site .......... 100%
+<span class="ok">✓</span> staging stack .......... 100%
+fleet readiness: <b class="ok">100%</b> <span class="dim">— restore drill green, nothing outside git</span></pre>
       </div>
       <div>
-        <div class="est" style="margin-bottom:.5rem">TODAY — measured from the bars above</div>
-        <pre id="now-board" style="margin:0;padding:.9rem;background:var(--card);border:1px solid rgba(27,38,44,.12);border-radius:6px;overflow:auto;font-size:.85rem;line-height:1.7;box-shadow:0 1px 2px rgba(27,38,44,.08),0 12px 28px -14px rgba(27,38,44,.45)"></pre>
+        <p class="caption">Today — measured from the rows above</p>
+        <pre class="terminal" id="now-board"></pre>
       </div>
     </div>
   </div>
@@ -349,47 +401,99 @@ fleet readiness: <b style="color:var(--accent)">100%</b> — restore drill green
 
 <script>
 
-// emergency redeploy readiness — click a project for its audit detail
+// emergency redeploy readiness — each repo is scored; click a row for its audit
 const LAN_NODES = [
-  { id: 'cloud', name: 'cpompa-ai-cloud', sub: 'prod control plane · 90%', pct: 90, icon: '☁️',
-    detail: '<b>90% — closest to one-shot.</b> <b>Covered:</b> both dev and prod compose files tracked; a named-only env template (<code>.env.prod.example</code>) that CI validates against the compose file, with <code>${VAR:?}</code> gates that refuse a half-configured boot; <code>bootstrap_env.py</code> regenerates env files from scratch; a cold-rebuild runbook written for exactly this scenario (total loss of the deploy box); nightly Postgres backups that snapshot the env files alongside the dump, synced off-box; an automated weekly restore drill that loads the newest dump and compares row counts against live; 26 alembic migrations so schema rebuilds from zero; <code>verify_runtime.sh</code> builds and boots the same image CI deploys. <b>Still missing:</b> DNS/overlay config lives outside the repo, and the runbook ends in a short human checklist (Stripe + OAuth console values) — by design, those never touch git.' },
-  { id: 'lab', name: 'homelab-docker', sub: 'Terraform fleet · 100%', pct: 100, icon: '🖥️',
-    detail: '<b>100% — rebuilt and proven this month.</b> <b>Covered:</b> the whole fleet (Traefik, GitLab, Home Assistant, MQTT, Prometheus, Grafana, Loki, Matter) declared in Terraform with the Docker provider and deployed with a single <code>./start.sh</code>; Terraform HTTP remote state backend with a checksum-matched off-box mirror, restore verified as a round-trip; <code>*.tfvars.example</code> templates for the secret files; named volumes backed up off-box nightly with a scratch-restore drill verified by file-list diff; its own GitLab CI. <b>Proven:</b> a fresh-clone <code>--dry-run</code> drill passed 18/18 with zero prompts, and one real apply converged the fleet from a drifted, hand-maintained state — the final plan reads <b>"No changes"</b> with 9/9 containers healthy.' },
-  { id: 'site', name: 'This showcase site', sub: 'GitHub Pages · 100%', pct: 100, icon: '📄',
-    detail: '<b>100% — the proof of concept for the goal.</b> The repo <i>is</i> the deployment: static HTML/CSS/JS in git, GitHub Actions publishes on push, and CI (secrets scan, PII guard, HTML parse gate) must pass first. Delete the deployment, re-enable Pages from the repo, done — nothing exists outside git.' },
-  { id: 'desk', name: 'Desktop2 staging stack', sub: 'Terraform fleet · 100%', pct: 100, icon: '🖥️',
-    detail: '<b>100% — the former gap, closed.</b> The staging Docker host now runs from the tracked <code>homelab-docker</code> Terraform layout. The fleet (gitlab, grafana, homeassistant, loki, matter-server, mosquitto, prometheus, promtail, traefik) was converged by one real apply — new services created, stale containers replaced, named volumes untouched — and the final plan reads <b>"No changes. Your infrastructure matches the configuration."</b> What used to live in an untracked directory is now declared in code, applied, and reproducible from the repo.' },
+  { id: 'cloud', name: 'cpompa-ai-cloud', sub: 'prod control plane', pct: 90,
+    verdict: '<b>90% — closest to one-shot.</b> The stack comes back from git; what is left is config we deliberately keep out of the repo.',
+    covered: [
+      'both dev and prod compose files tracked; a named-only env template (<code>.env.prod.example</code>) that CI validates against the compose file, with <code>${VAR:?}</code> gates that refuse a half-configured boot',
+      '<code>bootstrap_env.py</code> regenerates env files from scratch',
+      'a cold-rebuild runbook written for exactly this scenario — total loss of the deploy box',
+      'nightly Postgres backups that snapshot the env files alongside the dump, synced off-box',
+      'an automated weekly restore drill that loads the newest dump and compares row counts against live',
+      '26 alembic migrations, so the schema rebuilds from zero',
+      '<code>verify_runtime.sh</code> builds and boots the same image CI deploys'
+    ],
+    gap: [
+      'DNS and overlay config live outside the repo',
+      'the runbook ends in a short human checklist (Stripe + OAuth console values) — by design, those never touch git'
+    ] },
+  { id: 'lab', name: 'homelab-docker', sub: 'Terraform fleet', pct: 100,
+    verdict: '<b>100% — rebuilt and proven this month.</b>',
+    covered: [
+      'the whole fleet — Traefik, GitLab, Home Assistant, MQTT, Prometheus, Grafana, Loki, Matter — declared in Terraform with the Docker provider and deployed with a single <code>./start.sh</code>',
+      'Terraform HTTP remote state backend with a checksum-matched off-box mirror, restore verified as a round-trip',
+      '<code>*.tfvars.example</code> templates for the secret files',
+      'named volumes backed up off-box nightly, with a scratch-restore drill verified by file-list diff',
+      'its own GitLab CI'
+    ],
+    proven: 'a fresh-clone <code>--dry-run</code> drill passed 18/18 with zero prompts, and one real apply converged the fleet from a drifted, hand-maintained state — the final plan reads <b>&ldquo;No changes&rdquo;</b> with 9/9 containers healthy.' },
+  { id: 'site', name: 'This showcase site', sub: 'GitHub Pages', pct: 100,
+    verdict: '<b>100% — the proof of concept for the goal.</b>',
+    covered: [
+      'static HTML/CSS/JS in git; GitHub Actions publishes on push',
+      'CI (secrets scan, PII guard, HTML parse gate) must pass first'
+    ],
+    proven: 'delete the deployment, re-enable Pages from the repo, done — nothing exists outside git.' },
+  { id: 'desk', name: 'Desktop2 staging stack', sub: 'Terraform fleet', pct: 100,
+    verdict: '<b>100% — the former gap, closed.</b>',
+    covered: [
+      'the staging Docker host now runs from the tracked <code>homelab-docker</code> Terraform layout',
+      'the fleet — gitlab, grafana, homeassistant, loki, matter-server, mosquitto, prometheus, promtail, traefik — converged by one real apply: new services created, stale containers replaced, named volumes untouched'
+    ],
+    proven: 'the final plan reads <b>&ldquo;No changes. Your infrastructure matches the configuration.&rdquo;</b> What used to live in an untracked directory is now declared in code, applied, and reproducible from the repo.' },
 ];
+
 const lanMap = document.getElementById('lan-map');
 const lanDetail = document.getElementById('lan-detail');
-const barColor = p => p >= 100 ? 'var(--accent)' : p >= 50 ? 'var(--fg)' : 'var(--muted)';
-lanMap.innerHTML = LAN_NODES.map((n, i) => `
-  <button class="plan" data-lan="${i}" style="cursor:pointer;text-align:left;font:inherit;padding:.65rem .85rem">
-    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.6rem">
-      <span style="font-size:1.05rem">${n.icon} <b>${n.name}</b> <span class="est" style="margin-left:.3rem">${n.sub.split('·')[0].trim()}</span></span>
-      <span style="font-weight:800;white-space:nowrap;color:${n.pct >= 100 ? 'var(--accent)' : 'inherit'}">${n.pct}%</span>
-    </div>
-    <div style="height:16px;border:1px solid var(--border);border-radius:5px;margin-top:.45rem;overflow:hidden;background:repeating-linear-gradient(45deg,transparent,transparent 4px,var(--border) 4px,var(--border) 7px)">
-      <div style="height:100%;width:${n.pct}%;background:${barColor(n.pct)}"></div>
-    </div>
-  </button>`).join('');
 const avg = Math.round(LAN_NODES.reduce((s, n) => s + n.pct, 0) / LAN_NODES.length);
+const ready = LAN_NODES.filter(n => n.pct >= 100).length;
+
 document.getElementById('fleet-pct').textContent = avg + '%';
-document.getElementById('fleet-pct').style.color = avg >= 100 ? 'var(--accent)' : 'inherit';
+document.getElementById('fleet-note').textContent =
+  `fleet average — ${ready} of ${LAN_NODES.length} rebuild from git in one shot`;
+
+lanMap.innerHTML = LAN_NODES.map((n, i) => `
+  <button class="rowbtn" data-lan="${i}" aria-pressed="${i === 0}">
+    <span class="row-top">
+      <span class="row-name">${n.name}</span>
+      <span class="row-sub">${n.sub}</span>
+      <span class="chip ${n.pct >= 100 ? 'ok' : 'gap'}">${n.pct >= 100 ? 'ready' : 'gap'}</span>
+      <span class="row-pct">${n.pct}%</span>
+    </span>
+    <span class="meter"><i class="${n.pct >= 100 ? 'full' : ''}" style="width:${n.pct}%"></i></span>
+  </button>`).join('');
+
 document.getElementById('now-board').innerHTML =
   LAN_NODES.map(n =>
-    `${n.pct >= 100 ? '✓' : '✗'} ${n.name} ${'.'.repeat(Math.max(2, 24 - n.name.length))} ${n.pct}%`
+    `<span class="${n.pct >= 100 ? 'ok' : 'gap'}">${n.pct >= 100 ? '✓' : '✗'}</span> ` +
+    `${n.name} ${'.'.repeat(Math.max(2, 24 - n.name.length))} ${n.pct}%`
   ).join('\n') + `\nfleet readiness: ${avg}% ${avg >= 100 ? '— done' : `— ${100 - avg} pts to go`}`;
+
+// the audit: a verdict line, then labelled lists instead of one long paragraph
+const auditHTML = n => `
+  <p class="detail-verdict">${n.verdict}</p>
+  <div class="detail-cols">
+    <div>
+      <h4>Covered by the repo</h4>
+      <ul>${n.covered.map(c => `<li>${c}</li>`).join('')}</ul>
+    </div>
+    <div>
+      <h4>${n.gap ? 'Still lives outside git' : 'Proven live'}</h4>
+      ${n.gap ? `<ul>${n.gap.map(g => `<li>${g}</li>`).join('')}</ul>` : `<p>${n.proven}</p>`}
+    </div>
+  </div>`;
+
 const showNode = i => {
-  lanDetail.innerHTML = LAN_NODES[i].detail;
+  lanDetail.innerHTML = auditHTML(LAN_NODES[i]);
   lanMap.querySelectorAll('[data-lan]').forEach(b =>
-    b.style.borderColor = +b.dataset.lan === i ? 'var(--accent)' : '');
+    b.setAttribute('aria-pressed', String(+b.dataset.lan === i)));
 };
 lanMap.addEventListener('click', e => {
   const b = e.target.closest('[data-lan]');
   if (b) showNode(+b.dataset.lan);
 });
-showNode(0); // default: the control plane
+showNode(0); // default: the control planeshowNode(0); // default: the control plane
 
 </script>
 </body>
